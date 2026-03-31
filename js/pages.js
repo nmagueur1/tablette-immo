@@ -655,12 +655,31 @@ function renderVotes() {
   el.innerHTML = !votes.length
     ? `<div class="empty"><div class="empty-icon">🗳</div><div class="empty-text">Aucun vote enregistré</div></div>`
     : [...votes].sort((a, b) => b.ts - a.ts).map(v => {
-        const bulletins = v.bulletins || [];
-        const pour      = bulletins.filter(b => b.choix === 'pour').length;
-        const contre    = bulletins.filter(b => b.choix === 'contre').length;
-        const abst      = bulletins.filter(b => b.choix === 'abstention').length;
-        const isOpen    = v.statut === 'ouvert';
-        const pct       = bulletins.length ? Math.round((pour / bulletins.length) * 100) : 0;
+        const bulletins    = v.bulletins || [];
+        const propositions = v.propositions && v.propositions.length ? v.propositions : ['Pour', 'Contre', 'Abstention'];
+        const isOpen       = v.statut === 'ouvert';
+        const total        = bulletins.length;
+
+        // Compte par proposition
+        const scores = propositions.map(p => ({
+          label: p,
+          nb:    bulletins.filter(b => b.choix === p).length,
+        }));
+        const maxNb = Math.max(...scores.map(s => s.nb), 1);
+
+        const barsHTML = scores.map(s => {
+          const pct   = Math.round((s.nb / (total || 1)) * 100);
+          const isMax = s.nb === maxNb && s.nb > 0;
+          return `
+          <div style="display:flex;align-items:center;gap:0.75rem;min-width:160px;">
+            <div style="font-size:11px;color:var(--c-muted);width:80px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${s.label}">${s.label}</div>
+            <div style="flex:1;height:6px;background:var(--c-border-m);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${isMax ? 'var(--c-gold)' : 'var(--c-surface)'};border-radius:3px;transition:width 0.4s;"></div>
+            </div>
+            <span style="font-family:var(--f-display);font-size:16px;color:${isMax ? 'var(--c-gold)' : 'var(--c-faint)'};">${s.nb}</span>
+          </div>`;
+        }).join('');
+
         return `
         <div class="journal-entry" style="border-left:3px solid ${isOpen ? 'var(--c-green)' : 'var(--c-faint)'};margin-bottom:1rem;">
           <div class="journal-entry-head">
@@ -669,6 +688,7 @@ function renderVotes() {
               <div style="display:flex;gap:0.5rem;align-items:center;margin-top:5px;">
                 <span class="tag tag-${isOpen ? 'green' : 'gray'}">${isOpen ? 'Ouvert' : 'Clôturé'}</span>
                 <span class="tag tag-gray">${v.type}</span>
+                <span style="font-size:10px;color:var(--c-faint);">${total} vote${total > 1 ? 's' : ''}</span>
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0;">
@@ -679,51 +699,62 @@ function renderVotes() {
             </div>
           </div>
           ${v.description ? `<div class="journal-entry-body" style="margin-top:0.75rem;">${v.description}</div>` : ''}
-          <div style="display:flex;gap:2rem;margin-top:1rem;align-items:center;flex-wrap:wrap;">
-            <div style="display:flex;align-items:baseline;gap:0.4rem;">
-              <span style="font-family:var(--f-display);font-size:24px;color:var(--c-green);">${pour}</span>
-              <span style="font-size:11px;color:var(--c-muted);">Pour</span>
-            </div>
-            <div style="display:flex;align-items:baseline;gap:0.4rem;">
-              <span style="font-family:var(--f-display);font-size:24px;color:var(--c-red);">${contre}</span>
-              <span style="font-size:11px;color:var(--c-muted);">Contre</span>
-            </div>
-            <div style="display:flex;align-items:baseline;gap:0.4rem;">
-              <span style="font-family:var(--f-display);font-size:24px;color:var(--c-faint);">${abst}</span>
-              <span style="font-size:11px;color:var(--c-muted);">Abstention</span>
-            </div>
-            ${bulletins.length ? `
-            <div style="flex:1;min-width:120px;">
-              <div style="height:4px;background:var(--c-border-m);border-radius:2px;overflow:hidden;margin-bottom:4px;">
-                <div style="height:100%;width:${pct}%;background:var(--c-green);border-radius:2px;transition:width 0.4s;"></div>
-              </div>
-              <div style="font-size:10px;color:var(--c-faint);">${bulletins.map(b => `${b.membre} (${b.choix})`).join(' · ')}</div>
-            </div>` : ''}
+          <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:1rem;">
+            ${barsHTML}
           </div>
+          ${total ? `<div style="font-size:10px;color:var(--c-faint);margin-top:0.5rem;">${bulletins.map(b => `${b.membre} → ${b.choix}`).join(' · ')}</div>` : ''}
           ${!isOpen && v.resultat ? `<div style="margin-top:0.75rem;padding:0.6rem 1rem;background:var(--c-surface);border-radius:var(--r-md);font-size:12px;color:var(--c-gold);">Résultat : ${v.resultat}</div>` : ''}
         </div>`;
       }).join('');
 }
 
+window.addProposition = function() {
+  const container = document.getElementById('vo-propositions');
+  const idx = container.children.length;
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:0.5rem;align-items:center;';
+  row.innerHTML = `
+    <input class="form-input" placeholder="Option ${idx + 1}…" style="flex:1;" />
+    <button type="button" onclick="this.parentElement.remove()" style="flex-shrink:0;background:none;border:none;color:var(--c-red);font-size:16px;cursor:pointer;padding:0 0.25rem;">✕</button>`;
+  container.appendChild(row);
+  row.querySelector('input').focus();
+};
+
 function newVote() {
   ['vo-id','vo-titre','vo-description'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('vo-type').value = 'décision';
+  // Propositions par défaut : Pour / Contre
+  const container = document.getElementById('vo-propositions');
+  container.innerHTML = '';
+  ['Pour', 'Contre', 'Abstention'].forEach(label => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:0.5rem;align-items:center;';
+    row.innerHTML = `
+      <input class="form-input" value="${label}" style="flex:1;" />
+      <button type="button" onclick="this.parentElement.remove()" style="flex-shrink:0;background:none;border:none;color:var(--c-red);font-size:16px;cursor:pointer;padding:0 0.25rem;">✕</button>`;
+    container.appendChild(row);
+  });
   openModal('modal-vote');
 }
 
 function saveVote() {
   const titre = document.getElementById('vo-titre').value.trim();
   if (!titre) { toast('Le titre est requis.'); return; }
+  // Récupère les propositions
+  const propositions = [...document.getElementById('vo-propositions').querySelectorAll('input')]
+    .map(el => el.value.trim()).filter(Boolean);
+  if (propositions.length < 2) { toast('Ajoute au moins 2 propositions.'); return; }
   if (!DB.votes) DB.votes = [];
   const vote = {
     id: uid(), ts: Date.now(), titre,
-    description: document.getElementById('vo-description').value.trim(),
-    type:        document.getElementById('vo-type').value,
-    statut:      'ouvert',
-    bulletins:   [],
+    description:  document.getElementById('vo-description').value.trim(),
+    type:         document.getElementById('vo-type').value,
+    propositions,
+    statut:       'ouvert',
+    bulletins:    [],
   };
   DB.votes.push(vote);
-  DB.journal.push({ id: uid(), ts: Date.now(), titre: `Vote ouvert : ${titre}`, contenu: `Type : ${vote.type}${vote.description ? ' · ' + vote.description : ''}`, tags: ['vote'], auteur: 'Système' });
+  DB.journal.push({ id: uid(), ts: Date.now(), titre: `Vote ouvert : ${titre}`, contenu: `Options : ${propositions.join(', ')}`, tags: ['vote'], auteur: 'Système' });
   saveDB();
   closeModal('modal-vote');
   renderVotes();
@@ -731,10 +762,16 @@ function saveVote() {
 }
 
 function ouvrirModalVoter(id) {
-  document.getElementById('voter-id').value   = id;
-  document.getElementById('voter-choix').value = 'pour';
-  const sel = document.getElementById('voter-membre');
-  sel.innerHTML = DB.membres.map(m => `<option value="${m.nom}">${m.nom}</option>`).join('');
+  const vote = (DB.votes || []).find(v => v.id === id);
+  if (!vote) return;
+  document.getElementById('voter-id').value = id;
+  // Membres
+  const selMembre = document.getElementById('voter-membre');
+  selMembre.innerHTML = DB.membres.map(m => `<option value="${m.nom}">${m.nom}</option>`).join('');
+  // Propositions dynamiques
+  const propositions = vote.propositions && vote.propositions.length ? vote.propositions : ['Pour', 'Contre', 'Abstention'];
+  const selChoix = document.getElementById('voter-choix');
+  selChoix.innerHTML = propositions.map(p => `<option value="${p}">${p}</option>`).join('');
   openModal('modal-voter');
 }
 
@@ -759,14 +796,22 @@ function soumettreBulletin() {
 function cloturerVote(id) {
   const vote = (DB.votes || []).find(v => v.id === id);
   if (!vote) return;
-  const bulletins = vote.bulletins || [];
-  const pour      = bulletins.filter(b => b.choix === 'pour').length;
-  const contre    = bulletins.filter(b => b.choix === 'contre').length;
+  const bulletins    = vote.bulletins || [];
+  const propositions = vote.propositions && vote.propositions.length ? vote.propositions : ['Pour', 'Contre', 'Abstention'];
   let resultat;
-  if (!bulletins.length)  resultat = 'Aucun vote exprimé';
-  else if (pour > contre) resultat = `✅ Approuvé (${pour} pour, ${contre} contre)`;
-  else if (contre > pour) resultat = `❌ Rejeté (${contre} contre, ${pour} pour)`;
-  else                    resultat = `⚖ Égalité — décision au Patron (${pour} pour, ${contre} contre)`;
+  if (!bulletins.length) {
+    resultat = 'Aucun vote exprimé';
+  } else {
+    // Compte par proposition
+    const scores = propositions.map(p => ({ label: p, nb: bulletins.filter(b => b.choix === p).length }));
+    scores.sort((a, b) => b.nb - a.nb);
+    const [first, second] = scores;
+    if (first.nb === (second?.nb ?? -1)) {
+      resultat = `⚖ Égalité entre "${first.label}" et "${second.label}" — décision au Patron`;
+    } else {
+      resultat = `🏆 "${first.label}" remporte le vote (${first.nb} voix) · ${scores.slice(1).map(s => `${s.label} : ${s.nb}`).join(', ')}`;
+    }
+  }
   vote.statut   = 'clôturé';
   vote.resultat = resultat;
   DB.journal.push({ id: uid(), ts: Date.now(), titre: `Vote clôturé : ${vote.titre}`, contenu: resultat, tags: ['vote'], auteur: 'Système' });

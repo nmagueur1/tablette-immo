@@ -549,15 +549,24 @@
       <label class="form-label">Description</label>
       <textarea class="form-textarea" id="vo-description" placeholder="Contexte et détails du vote…"></textarea>
     </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="vo-type">
+          <option value="décision">Décision</option>
+          <option value="mission">Mission</option>
+          <option value="recrutement">Recrutement</option>
+          <option value="finances">Finances</option>
+          <option value="autre">Autre</option>
+        </select>
+      </div>
+    </div>
     <div class="form-group">
-      <label class="form-label">Type</label>
-      <select class="form-select" id="vo-type">
-        <option value="décision">Décision</option>
-        <option value="mission">Mission</option>
-        <option value="recrutement">Recrutement</option>
-        <option value="finances">Finances</option>
-        <option value="autre">Autre</option>
-      </select>
+      <label class="form-label" style="display:flex;justify-content:space-between;align-items:center;">
+        Propositions de réponse
+        <button type="button" onclick="addProposition()" style="font-size:11px;padding:0.2rem 0.6rem;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-sm);color:var(--c-gold);cursor:pointer;">+ Ajouter</button>
+      </label>
+      <div id="vo-propositions" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('modal-vote')">Annuler</button>
@@ -577,11 +586,7 @@
     </div>
     <div class="form-group">
       <label class="form-label">Votre choix</label>
-      <select class="form-select" id="voter-choix">
-        <option value="pour">✅ Pour</option>
-        <option value="contre">❌ Contre</option>
-        <option value="abstention">⚪ Abstention</option>
-      </select>
+      <select class="form-select" id="voter-choix"></select>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('modal-voter')">Annuler</button>
@@ -681,4 +686,4 @@
   }
 </script>
 </body>
-</html>
+</h
