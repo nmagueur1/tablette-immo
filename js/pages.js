@@ -608,10 +608,17 @@ window.saveVente = function() {
   };
   if (!DB.ventes) DB.ventes = [];
   DB.ventes.push(data);
+
+  // Ajoute automatiquement une transaction en caisse
+  if (!DB.finances.transactions) DB.finances.transactions = [];
+  DB.finances.transactions.push({ id: uid(), ts: Date.now(), label: `Vente : ${bien}`, montant, type: 'entree', note: `Vendeur : ${vendeur}` });
+  DB.finances.caisse += montant;
+
   DB.journal.push({ id: uid(), ts: Date.now(), titre: `Vente : ${bien}`, contenu: `${vendeur} a vendu "${bien}" pour ${fmtMoney(montant)}.`, tags: ['vente'], auteur: 'Système' });
   saveDB();
   closeModal('modal-vente');
   renderVentes();
+  if (typeof renderFinances === 'function') renderFinances();
   toast('Vente enregistrée.');
 };
 
