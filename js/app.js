@@ -31,7 +31,7 @@ const defaultDB = {
   ],
   finances: { caisse: 0, objectif: 500000, objectifLabel: 'Rachat des parts', transactions: [] },
   missions: [],
-  proprietes: [],
+  ventes: [],
   votes: [],
   journal: []
 };
@@ -98,7 +98,7 @@ const PAGE_TITLES = {
   dashboard:  'Tableau de bord',   membres:   'Gestion des membres',
   finances:   'Caisse & Finances', missions:  'Objectifs & Missions',
   journal:    'Journal des actions',
-  proprietes: 'Biens Immobiliers', votes:     'Votes & Décisions',
+  ventes:     'Ventes',            votes:     'Votes & Décisions',
 };
 
 function renderPage(page) {
@@ -107,7 +107,7 @@ function renderPage(page) {
   if (page === 'finances')   window.renderFinances?.();
   if (page === 'missions')   window.renderMissions?.();
   if (page === 'journal')    window.renderJournal?.();
-  if (page === 'proprietes') window.renderProprietes?.();
+  if (page === 'ventes')     window.renderVentes?.();
   if (page === 'votes')      window.renderVotes?.();
 }
 

@@ -544,105 +544,89 @@ function statutPropTag(s) {
   return 'gray';
 }
 
-function renderProprietes() {
-  const tbody = document.getElementById('prop-tbody');
+function renderVentes() {
+  const tbody = document.getElementById('vente-tbody');
   if (!tbody) return;
 
-  const props       = DB.proprietes || [];
-  const totalValeur = props.reduce((s, p) => s + (p.valeur || 0), 0);
-  const totalLoyer  = props.filter(p => p.statut === 'loué').reduce((s, p) => s + (p.loyer || 0), 0);
-  const nbLoues     = props.filter(p => p.statut === 'loué').length;
+  const ventes = DB.ventes || [];
+  const ca     = ventes.reduce((s, v) => s + (v.montant || 0), 0);
+  const moy    = ventes.length ? Math.round(ca / ventes.length) : 0;
 
-  document.getElementById('prop-stat-biens').textContent  = props.length;
-  document.getElementById('prop-stat-valeur').textContent = fmtMoney(totalValeur);
-  document.getElementById('prop-stat-loyer').textContent  = fmtMoney(totalLoyer) + '/mois';
-  document.getElementById('prop-stat-loues').textContent  = nbLoues;
+  // Top vendeur ce mois
+  const now    = new Date();
+  const moisCo = ventes.filter(v => { const d = new Date(v.ts); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+  const scoreVend = {};
+  moisCo.forEach(v => { const k = v.vendeur || '—'; scoreVend[k] = (scoreVend[k] || 0) + (v.montant || 0); });
+  const topVend = Object.entries(scoreVend).sort((a, b) => b[1] - a[1])[0];
 
-  tbody.innerHTML = !props.length
-    ? `<tr><td colspan="7"><div class="empty"><div class="empty-icon">🏠</div><div class="empty-text">Aucun bien enregistré</div></div></td></tr>`
-    : [...props].sort((a, b) => b.ts - a.ts).map(p => `
+  document.getElementById('vente-stat-nb').textContent  = ventes.length;
+  document.getElementById('vente-stat-ca').textContent  = fmtMoney(ca);
+  document.getElementById('vente-stat-moy').textContent = ventes.length ? fmtMoney(moy) : '—';
+  document.getElementById('vente-stat-top').textContent = topVend ? topVend[0] : '—';
+
+  tbody.innerHTML = !ventes.length
+    ? `<tr><td colspan="8"><div class="empty"><div class="empty-icon">🏠</div><div class="empty-text">Aucune vente enregistrée</div></div></td></tr>`
+    : [...ventes].sort((a, b) => b.ts - a.ts).map(v => `
       <tr>
+        <td style="font-size:12px;color:var(--c-muted);">${fmtDateShort(v.ts)}</td>
+        <td style="font-weight:500;">${v.bien || '—'}</td>
+        <td><span class="tag tag-gray">${v.type || '—'}</span></td>
+        <td style="font-family:var(--f-display);font-size:18px;color:var(--c-gold);">${fmtMoney(v.montant || 0)}</td>
+        <td style="font-weight:500;">${v.vendeur || '—'}</td>
+        <td style="color:var(--c-muted);">${v.acheteur || '—'}</td>
+        <td style="color:var(--c-muted);font-size:12px;">${v.note || '—'}</td>
         <td>
-          <div style="font-weight:500;">${p.adresse}</div>
-          <div style="font-size:11px;color:var(--c-muted);">${p.quartier || '—'}</div>
-        </td>
-        <td><span class="tag tag-gray">${p.type}</span></td>
-        <td style="font-family:var(--f-display);font-size:18px;color:var(--c-gold);">${fmtMoney(p.valeur || 0)}</td>
-        <td style="color:${p.loyer ? 'var(--c-green)' : 'var(--c-faint)'};">${p.loyer ? fmtMoney(p.loyer) + '/mois' : '—'}</td>
-        <td><span class="tag tag-${statutPropTag(p.statut)}">${p.statut}</span></td>
-        <td style="color:var(--c-muted);font-size:12px;">${p.note || '—'}</td>
-        <td>
-          <div style="display:flex;gap:6px;">
-            <button class="btn-secondary patron-only" style="padding:0.3rem 0.65rem;font-size:11px;" onclick="editPropriete('${p.id}')">Modifier</button>
-            <button class="btn-danger patron-only" onclick="deletePropriete('${p.id}')">✕</button>
-          </div>
+          <button class="btn-danger patron-only" onclick="deleteVente('${v.id}')">✕</button>
         </td>
       </tr>`).join('');
 }
 
-function newPropriete() {
-  ['pr-id','pr-adresse','pr-quartier','pr-valeur','pr-loyer','pr-note'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('pr-type').value   = 'Appartement';
-  document.getElementById('pr-statut').value = 'libre';
-  document.getElementById('modal-prop-title').textContent = 'Nouveau bien';
-  openModal('modal-propriete');
+function newVente() {
+  ['vt-id','vt-bien','vt-montant','vt-acheteur','vt-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('vt-type').value = 'Appartement';
+  // Populate vendeur select from membres
+  const sel = document.getElementById('vt-vendeur');
+  sel.innerHTML = (DB.membres || []).map(m => `<option value="${m.pseudo || m.nom}">${m.pseudo || m.nom} (${m.role})</option>`).join('');
+  document.getElementById('modal-vente-title').innerHTML = 'Nouvelle <em>vente</em>';
+  openModal('modal-vente');
 }
 
-function editPropriete(id) {
-  const p = (DB.proprietes || []).find(x => x.id === id);
-  if (!p) return;
-  document.getElementById('pr-id').value       = p.id;
-  document.getElementById('pr-adresse').value  = p.adresse;
-  document.getElementById('pr-quartier').value = p.quartier || '';
-  document.getElementById('pr-type').value     = p.type;
-  document.getElementById('pr-valeur').value   = p.valeur || '';
-  document.getElementById('pr-loyer').value    = p.loyer  || '';
-  document.getElementById('pr-statut').value   = p.statut;
-  document.getElementById('pr-note').value     = p.note   || '';
-  document.getElementById('modal-prop-title').textContent = 'Modifier le bien';
-  openModal('modal-propriete');
-}
-
-function savePropriete() {
-  const id      = document.getElementById('pr-id').value;
-  const adresse = document.getElementById('pr-adresse').value.trim();
-  if (!adresse) { toast("L'adresse est requise."); return; }
-  const valeur = parseFloat(document.getElementById('pr-valeur').value) || 0;
-  const loyer  = parseFloat(document.getElementById('pr-loyer').value)  || 0;
-  const data   = {
-    adresse,
-    quartier: document.getElementById('pr-quartier').value.trim(),
-    type:     document.getElementById('pr-type').value,
-    valeur, loyer,
-    statut:   document.getElementById('pr-statut').value,
-    note:     document.getElementById('pr-note').value.trim(),
+window.saveVente = function() {
+  const bien    = document.getElementById('vt-bien').value.trim();
+  if (!bien) { toast('Le nom du bien est requis.'); return; }
+  const montant = parseFloat(document.getElementById('vt-montant').value) || 0;
+  const vendeur = document.getElementById('vt-vendeur').value;
+  const data = {
+    id:       uid(),
+    ts:       Date.now(),
+    bien,
+    type:     document.getElementById('vt-type').value,
+    montant,
+    vendeur,
+    acheteur: document.getElementById('vt-acheteur').value.trim(),
+    note:     document.getElementById('vt-note').value.trim(),
   };
-  if (!DB.proprietes) DB.proprietes = [];
-  if (id) {
-    const idx = DB.proprietes.findIndex(p => p.id === id);
-    if (idx >= 0) DB.proprietes[idx] = { ...DB.proprietes[idx], ...data };
-    DB.journal.push({ id: uid(), ts: Date.now(), titre: `Bien modifié : ${adresse}`, contenu: `Statut : ${data.statut} · Valeur : ${fmtMoney(valeur)}${loyer ? ' · Loyer : ' + fmtMoney(loyer) + '/mois' : ''}`, tags: ['immobilier'], auteur: 'Système' });
-  } else {
-    DB.proprietes.push({ id: uid(), ts: Date.now(), ...data });
-    DB.journal.push({ id: uid(), ts: Date.now(), titre: `Nouveau bien : ${adresse}`, contenu: `Type : ${data.type} · Statut : ${data.statut} · Valeur : ${fmtMoney(valeur)}${loyer ? ' · Loyer : ' + fmtMoney(loyer) + '/mois' : ''}`, tags: ['immobilier'], auteur: 'Système' });
-  }
+  if (!DB.ventes) DB.ventes = [];
+  DB.ventes.push(data);
+  DB.journal.push({ id: uid(), ts: Date.now(), titre: `Vente : ${bien}`, contenu: `${vendeur} a vendu "${bien}" pour ${fmtMoney(montant)}.`, tags: ['vente'], auteur: 'Système' });
   saveDB();
-  closeModal('modal-propriete');
-  renderProprietes();
-  toast('Bien sauvegardé.');
-}
+  closeModal('modal-vente');
+  renderVentes();
+  toast('Vente enregistrée.');
+};
 
-function deletePropriete(id) {
-  if (!confirm('Supprimer ce bien ?')) return;
-  const p = (DB.proprietes || []).find(x => x.id === id);
-  if (p) DB.journal.push({ id: uid(), ts: Date.now(), titre: `Bien supprimé : ${p.adresse}`, contenu: `${p.type} à ${p.adresse} retiré du patrimoine familial.`, tags: ['immobilier'], auteur: 'Système' });
-  DB.proprietes = (DB.proprietes || []).filter(p => p.id !== id);
+window.deleteVente = function(id) {
+  if (!confirm('Supprimer cette vente ?')) return;
+  const v = (DB.ventes || []).find(x => x.id === id);
+  if (v) DB.journal.push({ id: uid(), ts: Date.now(), titre: `Vente supprimée : ${v.bien}`, contenu: `Vente de "${v.bien}" retirée.`, tags: ['vente'], auteur: 'Système' });
+  DB.ventes = (DB.ventes || []).filter(x => x.id !== id);
   saveDB();
-  renderProprietes();
-  toast('Bien supprimé.');
-}
+  renderVentes();
+  toast('Vente supprimée.');
+};
 
-window.renderProprietes = renderProprietes;
+window.renderVentes = renderVentes;
+window.newVente     = newVente;
 
 /* ═══════════════════════════════════════════════════
    VOTES & DÉCISIONS
@@ -807,6 +791,13 @@ function openFicheMembre(id) {
   });
   const missionsDone  = missionsLiees.filter(mis => mis.done).length;
 
+  /* ── Ventes ──────────────────────────────────── */
+  const ventesLiees = (DB.ventes || []).filter(v =>
+    (v.vendeur || '').toLowerCase() === m.pseudo.toLowerCase() ||
+    (v.vendeur || '').toLowerCase() === m.nom.toLowerCase()
+  ).sort((a, b) => b.ts - a.ts);
+  const caVentes = ventesLiees.reduce((s, v) => s + (v.montant || 0), 0);
+
   /* ── Journal ─────────────────────────────────── */
   const journalLie = DB.journal.filter(e => {
     const txt = (e.titre + ' ' + e.contenu).toLowerCase();
@@ -909,6 +900,18 @@ function openFicheMembre(id) {
       <div class="fiche-section">
         <div class="fiche-section-title">Missions</div>
         ${missionsHTML}
+      </div>
+
+      <div class="fiche-section">
+        <div class="fiche-section-title">Ventes (${ventesLiees.length}${ventesLiees.length ? ' · CA : ' + fmtMoney(caVentes) : ''})</div>
+        ${ventesLiees.length ? ventesLiees.slice(0,5).map(v => `
+          <div class="fiche-row">
+            <div class="fiche-row-icon">🏠</div>
+            <div class="fiche-row-main">
+              <div class="fiche-row-title">${v.bien} — ${fmtMoney(v.montant)}</div>
+              <div class="fiche-row-sub">${fmtDateShort(v.ts)} · ${v.acheteur || 'Acheteur inconnu'}</div>
+            </div>
+          </div>`).join('') : '<div class="fiche-empty">Aucune vente enregistrée</div>'}
       </div>
 
       <div class="fiche-section">

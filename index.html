@@ -41,8 +41,8 @@
       <div class="nav-item" data-page="journal">
         <span class="nav-item-icon">◐</span> Journal
       </div>
-      <div class="nav-item" data-page="proprietes">
-        <span class="nav-item-icon">⬡</span> Propriétés
+      <div class="nav-item" data-page="ventes">
+        <span class="nav-item-icon">⬡</span> Ventes
       </div>
       <div class="nav-item" data-page="votes">
         <span class="nav-item-icon">◯</span> Votes
@@ -253,32 +253,32 @@
       </div>
 
       <!-- PAGE : PROPRIÉTÉS -->
-      <div class="page" id="page-proprietes">
+      <div class="page" id="page-ventes">
         <div class="section-head">
-          <div class="section-head-title">Biens <em>Immobiliers</em></div>
-          <button class="btn-primary patron-only" onclick="newPropriete()">+ Bien</button>
+          <div class="section-head-title">Ventes <em>Immobilières</em></div>
+          <button class="btn-primary patron-only" onclick="newVente()">+ Vente</button>
         </div>
 
         <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:1.5rem;">
           <div class="stat-card">
-            <div class="stat-label">Biens</div>
-            <div class="stat-value" id="prop-stat-biens">—</div>
-            <div class="stat-sub">enregistrés</div>
+            <div class="stat-label">Ventes</div>
+            <div class="stat-value" id="vente-stat-nb">—</div>
+            <div class="stat-sub">enregistrées</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Valeur totale</div>
-            <div class="stat-value" style="font-size:20px;" id="prop-stat-valeur">—</div>
-            <div class="stat-sub">patrimoine</div>
+            <div class="stat-label">Chiffre d'affaires</div>
+            <div class="stat-value" style="font-size:20px;" id="vente-stat-ca">—</div>
+            <div class="stat-sub">total</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Revenus locatifs</div>
-            <div class="stat-value" style="font-size:20px;" id="prop-stat-loyer">—</div>
-            <div class="stat-sub">par mois</div>
+            <div class="stat-label">Vente moyenne</div>
+            <div class="stat-value" style="font-size:20px;" id="vente-stat-moy">—</div>
+            <div class="stat-sub">par transaction</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Biens loués</div>
-            <div class="stat-value" id="prop-stat-loues">—</div>
-            <div class="stat-sub">en location</div>
+            <div class="stat-label">Top vendeur</div>
+            <div class="stat-value" style="font-size:16px;" id="vente-stat-top">—</div>
+            <div class="stat-sub">ce mois-ci</div>
           </div>
         </div>
 
@@ -286,11 +286,11 @@
           <table>
             <thead>
               <tr>
-                <th>Adresse</th><th>Type</th><th>Valeur</th><th>Loyer</th>
-                <th>Statut</th><th>Note</th><th>Actions</th>
+                <th>Date</th><th>Bien</th><th>Type</th><th>Montant</th>
+                <th>Vendeur</th><th>Acheteur</th><th>Note</th><th>Actions</th>
               </tr>
             </thead>
-            <tbody id="prop-tbody"></tbody>
+            <tbody id="vente-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -489,23 +489,19 @@
   </div>
 </div>
 
-<!-- MODAL PROPRIÉTÉ -->
-<div class="modal-bg" id="modal-propriete">
+<!-- MODAL VENTE -->
+<div class="modal-bg" id="modal-vente">
   <div class="modal">
-    <div class="modal-title" id="modal-prop-title">Nouveau <em>bien</em></div>
-    <input type="hidden" id="pr-id" />
+    <div class="modal-title" id="modal-vente-title">Nouvelle <em>vente</em></div>
+    <input type="hidden" id="vt-id" />
     <div class="form-group">
-      <label class="form-label">Adresse</label>
-      <input class="form-input" id="pr-adresse" placeholder="Ex : 14 Route de Vinewood" />
+      <label class="form-label">Bien vendu</label>
+      <input class="form-input" id="vt-bien" placeholder="Ex : Appartement Vinewood Hills" />
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Quartier / Zone</label>
-        <input class="form-input" id="pr-quartier" placeholder="Ex : Vinewood" />
-      </div>
-      <div class="form-group">
         <label class="form-label">Type</label>
-        <select class="form-select" id="pr-type">
+        <select class="form-select" id="vt-type">
           <option>Appartement</option>
           <option>Maison</option>
           <option>Local commercial</option>
@@ -514,32 +510,28 @@
           <option>Autre</option>
         </select>
       </div>
+      <div class="form-group">
+        <label class="form-label">Montant ($)</label>
+        <input class="form-input" type="number" id="vt-montant" placeholder="250000" min="0" />
+      </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Valeur ($)</label>
-        <input class="form-input" type="number" id="pr-valeur" placeholder="250000" min="0" />
+        <label class="form-label">Vendeur</label>
+        <select class="form-select" id="vt-vendeur"></select>
       </div>
       <div class="form-group">
-        <label class="form-label">Loyer mensuel ($)</label>
-        <input class="form-input" type="number" id="pr-loyer" placeholder="5000 (si loué)" min="0" />
+        <label class="form-label">Acheteur</label>
+        <input class="form-input" id="vt-acheteur" placeholder="Nom de l'acheteur" />
       </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Statut</label>
-      <select class="form-select" id="pr-statut">
-        <option value="libre">Libre</option>
-        <option value="loué">Loué</option>
-        <option value="en vente">En vente</option>
-      </select>
     </div>
     <div class="form-group">
       <label class="form-label">Note interne</label>
-      <input class="form-input" id="pr-note" placeholder="Optionnel…" />
+      <input class="form-input" id="vt-note" placeholder="Optionnel…" />
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-propriete')">Annuler</button>
-      <button class="btn-primary" onclick="savePropriete()">Sauvegarder</button>
+      <button class="btn-secondary" onclick="closeModal('modal-vente')">Annuler</button>
+      <button class="btn-primary" onclick="saveVente()">Sauvegarder</button>
     </div>
   </div>
 </div>
