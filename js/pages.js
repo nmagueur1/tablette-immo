@@ -937,12 +937,12 @@ function openFicheMembre(id) {
           <div class="fiche-stat-label">Temps<br>total</div>
         </div>
         <div class="fiche-stat">
-          <div class="fiche-stat-val">${missionsLiees.length}</div>
-          <div class="fiche-stat-label">Missions<br>assignées</div>
+          <div class="fiche-stat-val">${ventesLiees.length}</div>
+          <div class="fiche-stat-label">Nombre<br>de ventes</div>
         </div>
         <div class="fiche-stat">
-          <div class="fiche-stat-val">${missionsDone}</div>
-          <div class="fiche-stat-label">Missions<br>terminées</div>
+          <div class="fiche-stat-val" style="font-size:14px;">${ventesLiees.length ? fmtMoney(Math.round(caVentes / ventesLiees.length)) : '—'}</div>
+          <div class="fiche-stat-label">Panier<br>moyen</div>
         </div>
       </div>
 
