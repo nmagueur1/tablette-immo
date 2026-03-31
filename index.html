@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tablette — [Nom Agence]</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- PAGE TRANSITION -->
+<div id="page-transition" style="position:fixed;inset:0;background:var(--c-black);z-index:1000;transition:opacity 0.4s;"></div>
+
+<div class="shell">
+
+  <!-- ── SIDEBAR ───────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo" id="sidebar-logo" style="cursor:default;user-select:none;">
+      <div class="sidebar-logo-name">[Nom Agence]<br><span id="sidebar-user-name">—</span></div>
+      <div class="sidebar-logo-sub">Tablette de gestion</div>
+      <div id="sidebar-role-badge" class="role-badge membre" style="margin-top:6px;">—</div>
+      <div id="reset-hint" style="display:none;margin-top:0.6rem;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--c-red);opacity:0.7;">Accès admin déverrouillé</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Navigation</div>
+      <div class="nav-item active" data-page="dashboard">
+        <span class="nav-item-icon">◈</span> Tableau de bord
+      </div>
+      <div class="nav-item" data-page="membres">
+        <span class="nav-item-icon">◉</span> Membres
+      </div>
+      <div class="nav-item" data-page="finances">
+        <span class="nav-item-icon">◆</span> Finances
+      </div>
+      <div class="nav-item" data-page="missions">
+        <span class="nav-item-icon">◎</span> Missions
+      </div>
+      <div class="nav-item" data-page="journal">
+        <span class="nav-item-icon">◐</span> Journal
+      </div>
+      <div class="nav-item" data-page="proprietes">
+        <span class="nav-item-icon">⬡</span> Propriétés
+      </div>
+      <div class="nav-item" data-page="votes">
+        <span class="nav-item-icon">◯</span> Votes
+      </div>
+      <div class="nav-section-label" style="margin-top:1.5rem;">Background</div>
+      <div class="nav-item" onclick="window.location.href='https://dossier-immo.netlify.app'">
+        <span class="nav-item-icon">↗</span> Ouvrir le dossier
+      </div>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <span class="sidebar-time" id="sidebar-time">00:00</span>
+      <button class="btn-theme" id="btn-logout" title="Déconnexion" style="font-size:13px;">⏻</button>
+      <button class="btn-theme" id="btn-theme"><span id="theme-icon">☀</span></button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ──────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <span class="topbar-title" id="topbar-title">Tableau de bord</span>
+      <div class="topbar-right" id="topbar-actions"></div>
+    </div>
+
+    <div class="content">
+
+      <!-- PAGE : DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Membres actifs</div>
+            <div class="stat-value" id="dash-membres">—</div>
+            <div class="stat-sub">sur 5 membres</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Caisse commune</div>
+            <div class="stat-value" style="font-size:22px;" id="dash-caisse">—</div>
+            <div class="stat-sub">disponible</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Missions actives</div>
+            <div class="stat-value" id="dash-missions">—</div>
+            <div class="stat-sub">en cours</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Journal</div>
+            <div class="stat-value" id="dash-journal">—</div>
+            <div class="stat-sub">entrées</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 280px;gap:1.5rem;margin-bottom:1.5rem;">
+          <div>
+            <div class="section-head">
+              <div class="section-head-title">Journal <em>récent</em></div>
+              <button class="btn-secondary" onclick="navigate('journal')">Tout voir</button>
+            </div>
+            <div id="dash-journal-list"></div>
+          </div>
+
+          <div>
+            <div class="section-head">
+              <div class="section-head-title" style="font-size:18px;">Objectif <em>rachat</em></div>
+            </div>
+            <div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--r-lg);padding:1.75rem;text-align:center;">
+              <svg width="120" height="120" viewBox="0 0 90 90" style="margin:0 auto 1rem;">
+                <circle class="progress-ring-track" cx="45" cy="45" r="36" stroke-width="7"/>
+                <circle class="progress-ring-bar progress-ring" id="dash-ring" cx="45" cy="45" r="36" stroke-width="7"
+                  style="stroke-dasharray:226;stroke-dashoffset:226;"/>
+              </svg>
+              <div style="font-family:var(--f-display);font-size:36px;font-weight:300;color:var(--c-gold);margin-bottom:4px;" id="dash-pct">0%</div>
+              <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--c-muted);">de l'objectif atteint</div>
+              <button class="btn-secondary" style="margin-top:1.25rem;width:100%;" onclick="navigate('finances')">Voir les finances</button>
+            </div>
+
+            <div style="margin-top:1.25rem;">
+              <div class="section-head">
+                <div class="section-head-title" style="font-size:18px;">Missions <em>actives</em></div>
+              </div>
+              <div id="dash-missions-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE : MEMBRES -->
+      <div class="page" id="page-membres">
+        <div class="section-head">
+          <div class="section-head-title">Les <em>membres</em></div>
+          <div style="display:flex;gap:0.75rem;">
+            <button class="btn-secondary patron-only" onclick="resetSemaine()">↺ Reset semaine</button>
+            <button class="btn-primary patron-only" onclick="newMembre()">+ Ajouter</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Membre</th><th>Rôle</th><th>Parts</th><th>Statut</th>
+                <th>Temps actif</th><th>Note</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="membres-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PAGE : FINANCES -->
+      <div class="page" id="page-finances">
+        <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+          <div class="stat-card">
+            <div class="stat-label">Caisse commune</div>
+            <div class="stat-value" style="font-size:26px;" id="fin-caisse">0 $</div>
+            <div class="stat-sub">total disponible</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Objectif rachat</div>
+            <div class="stat-value" style="font-size:26px;" id="fin-objectif">0 $</div>
+            <div class="stat-sub" id="fin-objectif-sub">à atteindre</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Progression</div>
+            <div class="stat-value" id="fin-pct">0%</div>
+            <div class="finance-bar-wrap"><div class="finance-bar" id="fin-bar" style="background:var(--c-gold);width:0%;"></div></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:1.5rem;">
+          <div>
+            <div class="section-head">
+              <div class="section-head-title">Transactions</div>
+              <div style="display:flex;gap:0.75rem;">
+                <button class="btn-secondary patron-only" onclick="openModal('modal-objectif')">⚙ Objectif</button>
+                <button class="btn-primary patron-only" onclick="openModal('modal-transaction')">+ Transaction</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Date</th><th>Libellé</th><th>Type</th><th>Montant</th><th></th></tr>
+                </thead>
+                <tbody id="fin-transactions"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-head">
+              <div class="section-head-title" style="font-size:18px;">Répartition <em>membres</em></div>
+            </div>
+            <div style="font-size:11px;color:var(--c-muted);margin-bottom:1rem;">25% de la caisse divisés selon les parts</div>
+            <div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--r-lg);overflow:hidden;">
+              <div id="fin-split"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE : MISSIONS -->
+      <div class="page" id="page-missions">
+        <div class="section-head">
+          <div class="section-head-title">Objectifs & <em>Missions</em></div>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <span style="font-size:12px;color:var(--c-muted);" id="missions-progress"></span>
+            <button class="btn-primary patron-only" onclick="newMission()">+ Mission</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;">
+          <div>
+            <div style="font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--c-green);margin-bottom:1rem;display:flex;align-items:center;gap:8px;">
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--c-green);flex-shrink:0;"></span>Court terme
+            </div>
+            <div id="missions-court_terme"></div>
+          </div>
+          <div>
+            <div style="font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--c-gold);margin-bottom:1rem;display:flex;align-items:center;gap:8px;">
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--c-gold);flex-shrink:0;"></span>Moyen terme
+            </div>
+            <div id="missions-moyen_terme"></div>
+          </div>
+          <div>
+            <div style="font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--c-blue);margin-bottom:1rem;display:flex;align-items:center;gap:8px;">
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--c-blue);flex-shrink:0;"></span>Long terme
+            </div>
+            <div id="missions-long_terme"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE : JOURNAL -->
+      <div class="page" id="page-journal">
+        <div class="section-head">
+          <div class="section-head-title">Journal des <em>actions</em></div>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span style="font-size:12px;color:var(--c-muted);" id="journal-count"></span>
+            <select id="journal-filter" class="form-select" style="width:auto;padding:0.4rem 0.75rem;font-size:12px;" onchange="renderJournal()">
+              <option value="all">Tous</option>
+              <option value="finances">Finances</option>
+              <option value="mission">Missions</option>
+              <option value="immobilier">Immobilier</option>
+            </select>
+            <button class="btn-primary patron-only" onclick="newJournal()">+ Entrée</button>
+          </div>
+        </div>
+        <div id="journal-list"></div>
+      </div>
+
+      <!-- PAGE : PROPRIÉTÉS -->
+      <div class="page" id="page-proprietes">
+        <div class="section-head">
+          <div class="section-head-title">Biens <em>Immobiliers</em></div>
+          <button class="btn-primary patron-only" onclick="newPropriete()">+ Bien</button>
+        </div>
+
+        <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:1.5rem;">
+          <div class="stat-card">
+            <div class="stat-label">Biens</div>
+            <div class="stat-value" id="prop-stat-biens">—</div>
+            <div class="stat-sub">enregistrés</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Valeur totale</div>
+            <div class="stat-value" style="font-size:20px;" id="prop-stat-valeur">—</div>
+            <div class="stat-sub">patrimoine</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Revenus locatifs</div>
+            <div class="stat-value" style="font-size:20px;" id="prop-stat-loyer">—</div>
+            <div class="stat-sub">par mois</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Biens loués</div>
+            <div class="stat-value" id="prop-stat-loues">—</div>
+            <div class="stat-sub">en location</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Adresse</th><th>Type</th><th>Valeur</th><th>Loyer</th>
+                <th>Statut</th><th>Note</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="prop-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PAGE : VOTES -->
+      <div class="page" id="page-votes">
+        <div class="section-head">
+          <div class="section-head-title">Votes & <em>Décisions</em></div>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span style="font-size:12px;color:var(--c-muted);" id="votes-count"></span>
+            <button class="btn-primary patron-only" onclick="newVote()">+ Vote</button>
+          </div>
+        </div>
+        <div id="votes-list"></div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div><!-- /shell -->
+
+<!-- ════════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════════ -->
+
+<!-- MODAL MEMBRE -->
+<!-- FICHE MEMBRE — Drawer -->
+<div class="fiche-overlay" id="fiche-overlay" onclick="closeFiche(event)">
+  <div class="fiche-panel" id="fiche-panel">
+    <!-- Populated by openFicheMembre() -->
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-membre">
+  <div class="modal">
+    <div class="modal-title" id="modal-membre-title">Nouveau <em>membre</em></div>
+    <input type="hidden" id="m-id" />
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nom complet</label>
+        <input class="form-input" id="m-nom" placeholder="Nom Prénom" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pseudo GTA</label>
+        <input class="form-input" id="m-pseudo" placeholder="[Pseudo]" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Initiales (avatar)</label>
+        <input class="form-input" id="m-initiales" placeholder="P1" maxlength="2" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Parts (%)</label>
+        <input class="form-input" id="m-parts" placeholder="30%" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Rôle</label>
+        <select class="form-select" id="m-role">
+          <option>Patron</option>
+          <option>Membre</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Statut</label>
+        <select class="form-select" id="m-statut">
+          <option value="actif">Actif</option>
+          <option value="absent">Absent</option>
+          <option value="inactif">Inactif</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note interne</label>
+      <input class="form-input" id="m-note" placeholder="Optionnel…" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-membre')">Annuler</button>
+      <button class="btn-primary" onclick="saveMembre()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TRANSACTION -->
+<div class="modal-bg" id="modal-transaction">
+  <div class="modal">
+    <div class="modal-title">Nouvelle <em>transaction</em></div>
+    <div class="form-group">
+      <label class="form-label">Libellé</label>
+      <input class="form-input" id="tx-label" placeholder="Ex : Vente appartement Vinewood" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Montant ($)</label>
+        <input class="form-input" id="tx-montant" type="number" min="0" placeholder="50000" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="tx-type">
+          <option value="entree">Entrée</option>
+          <option value="sortie">Sortie</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note (optionnel)</label>
+      <input class="form-input" id="tx-note" placeholder="Précisions…" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-transaction')">Annuler</button>
+      <button class="btn-primary" onclick="addTransaction()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL OBJECTIF -->
+<div class="modal-bg" id="modal-objectif">
+  <div class="modal">
+    <div class="modal-title">Modifier l'<em>objectif</em></div>
+    <div class="form-group">
+      <label class="form-label">Libellé objectif</label>
+      <input class="form-input" id="fin-objectif-label" placeholder="Ex : Rachat des parts" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Montant objectif ($)</label>
+      <input class="form-input" id="fin-objectif-input" type="number" min="0" placeholder="500000" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-objectif')">Annuler</button>
+      <button class="btn-primary" onclick="updateObjectif()">Mettre à jour</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MISSION -->
+<div class="modal-bg" id="modal-mission">
+  <div class="modal">
+    <div class="modal-title" id="modal-mission-title">Nouvelle <em>mission</em></div>
+    <input type="hidden" id="mis-id" />
+    <div class="form-group">
+      <label class="form-label">Titre</label>
+      <input class="form-input" id="mis-titre" placeholder="Ex : Rachat des 100% des parts" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="mis-desc" placeholder="Détails de la mission…"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Phase</label>
+        <select class="form-select" id="mis-phase">
+          <option>Court terme</option>
+          <option>Moyen terme</option>
+          <option>Long terme</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assigné à</label>
+        <input class="form-input" id="mis-assignee" placeholder="Nom du membre" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-mission')">Annuler</button>
+      <button class="btn-primary" onclick="saveMission()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL JOURNAL -->
+<div class="modal-bg" id="modal-journal">
+  <div class="modal">
+    <div class="modal-title">Nouvelle entrée <em>journal</em></div>
+    <div class="form-group">
+      <label class="form-label">Titre</label>
+      <input class="form-input" id="j-titre" placeholder="Ex : Première vente immobilière" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contenu</label>
+      <textarea class="form-textarea" id="j-contenu" placeholder="Décris l'action, l'événement, la décision…" style="min-height:120px;"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Auteur</label>
+        <input class="form-input" id="j-auteur" placeholder="Pseudo" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tags (virgules)</label>
+        <input class="form-input" id="j-tags" placeholder="immobilier, finances…" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-journal')">Annuler</button>
+      <button class="btn-primary" onclick="saveJournal()">Publier</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PROPRIÉTÉ -->
+<div class="modal-bg" id="modal-propriete">
+  <div class="modal">
+    <div class="modal-title" id="modal-prop-title">Nouveau <em>bien</em></div>
+    <input type="hidden" id="pr-id" />
+    <div class="form-group">
+      <label class="form-label">Adresse</label>
+      <input class="form-input" id="pr-adresse" placeholder="Ex : 14 Route de Vinewood" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Quartier / Zone</label>
+        <input class="form-input" id="pr-quartier" placeholder="Ex : Vinewood" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="pr-type">
+          <option>Appartement</option>
+          <option>Maison</option>
+          <option>Local commercial</option>
+          <option>Entrepôt</option>
+          <option>Terrain</option>
+          <option>Autre</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Valeur ($)</label>
+        <input class="form-input" type="number" id="pr-valeur" placeholder="250000" min="0" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Loyer mensuel ($)</label>
+        <input class="form-input" type="number" id="pr-loyer" placeholder="5000 (si loué)" min="0" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Statut</label>
+      <select class="form-select" id="pr-statut">
+        <option value="libre">Libre</option>
+        <option value="loué">Loué</option>
+        <option value="en vente">En vente</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note interne</label>
+      <input class="form-input" id="pr-note" placeholder="Optionnel…" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-propriete')">Annuler</button>
+      <button class="btn-primary" onclick="savePropriete()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VOTE -->
+<div class="modal-bg" id="modal-vote">
+  <div class="modal">
+    <div class="modal-title">Nouveau <em>vote</em></div>
+    <input type="hidden" id="vo-id" />
+    <div class="form-group">
+      <label class="form-label">Titre</label>
+      <input class="form-input" id="vo-titre" placeholder="Ex : Recruter un nouveau membre" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="vo-description" placeholder="Contexte et détails du vote…"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-select" id="vo-type">
+        <option value="décision">Décision</option>
+        <option value="mission">Mission</option>
+        <option value="recrutement">Recrutement</option>
+        <option value="finances">Finances</option>
+        <option value="autre">Autre</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-vote')">Annuler</button>
+      <button class="btn-primary" onclick="saveVote()">Créer le vote</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VOTER -->
+<div class="modal-bg" id="modal-voter">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-title">Émettre son <em>vote</em></div>
+    <input type="hidden" id="voter-id" />
+    <div class="form-group">
+      <label class="form-label">Votre nom</label>
+      <select class="form-select" id="voter-membre"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Votre choix</label>
+      <select class="form-select" id="voter-choix">
+        <option value="pour">✅ Pour</option>
+        <option value="contre">❌ Contre</option>
+        <option value="abstention">⚪ Abstention</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-voter')">Annuler</button>
+      <button class="btn-primary" onclick="soumettreBulletin()">Voter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESET -->
+<div class="modal-bg" id="modal-reset">
+  <div class="modal">
+    <div class="modal-title">Reset <em>données</em></div>
+    <p style="font-size:13px;color:var(--c-muted);margin-bottom:1.5rem;line-height:1.7;">
+      Cette action supprime toutes les données — transactions, membres modifiés, missions et journal. Irréversible.
+    </p>
+    <div class="form-group">
+      <label class="form-label">Code Co-dirigeant</label>
+      <input class="form-input" id="reset-code" type="password" placeholder="· · · · · ·" style="letter-spacing:0.3em;text-align:center;" />
+    </div>
+    <div id="reset-error" style="font-size:11px;color:#c06060;margin-top:0.5rem;min-height:16px;opacity:0;transition:opacity 0.3s;"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-reset');document.getElementById('reset-code').value='';">Annuler</button>
+      <button class="btn-primary" style="background:var(--c-red);border-color:var(--c-red);" onclick="confirmReset()">Tout effacer</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+<script src="js/pages.js"></script>
+<script>
+  // Auth check
+  if (!sessionStorage.getItem('tablette-auth')) window.location.href = 'gate.html';
+
+  // Pseudo connecté — affiche le prénom en bleu dans la sidebar
+  const userName = sessionStorage.getItem('tablette-user') || '—';
+  const displayName = userName.includes('@')
+    ? userName.split('@')[0].split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    : userName;
+  document.getElementById('sidebar-user-name').textContent = displayName;
+
+  // Déconnexion
+  document.getElementById('btn-logout').addEventListener('click', () => {
+    sessionStorage.clear();
+    window.location.href = 'gate.html';
+  });
+
+  // Fade in
+  setTimeout(() => {
+    document.getElementById('page-transition').style.opacity = '0';
+    setTimeout(() => document.getElementById('page-transition').style.display = 'none', 400);
+  }, 100);
+
+  // ── LONG PRESS SUR LE LOGO (3s) ──────────────────
+  const RESET_CODE = 'MKSB';
+  let pressTimer = null;
+  const logo = document.getElementById('sidebar-logo');
+
+  const startPress = () => {
+    logo.style.transition = 'opacity 3s linear';
+    logo.style.opacity = '0.4';
+    pressTimer = setTimeout(() => {
+      logo.style.opacity = '1';
+      document.getElementById('reset-hint').style.display = 'block';
+      openModal('modal-reset');
+      setTimeout(() => { document.getElementById('reset-hint').style.display = 'none'; }, 3000);
+    }, 3000);
+  };
+
+  const cancelPress = () => {
+    clearTimeout(pressTimer);
+    logo.style.transition = 'opacity 0.3s';
+    logo.style.opacity = '1';
+  };
+
+  logo.addEventListener('mousedown', startPress);
+  logo.addEventListener('mouseup', cancelPress);
+  logo.addEventListener('mouseleave', cancelPress);
+  logo.addEventListener('touchstart', e => { e.preventDefault(); startPress(); }, { passive: false });
+  logo.addEventListener('touchend', cancelPress);
+
+  // ── CONFIRM RESET ─────────────────────────────────
+  function confirmReset() {
+    const code = document.getElementById('reset-code').value.trim();
+    const errEl = document.getElementById('reset-error');
+    if (code !== RESET_CODE) {
+      errEl.textContent = 'Code incorrect.';
+      errEl.style.opacity = '1';
+      document.getElementById('reset-code').value = '';
+      setTimeout(() => { errEl.style.opacity = '0'; }, 2000);
+      return;
+    }
+    localStorage.clear();
+    closeModal('modal-reset');
+    document.getElementById('reset-code').value = '';
+    toast('Données effacées. Rechargement…');
+    setTimeout(() => location.reload(), 1200);
+  }
+</script>
+</body>
+</html>

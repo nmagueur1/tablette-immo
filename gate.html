@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <title>Accès — Tablette</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+    .gate {
+      width: 100%;
+      max-width: 420px;
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.9s var(--ease-out) 0.1s both;
+    }
+
+    .gate-logo {
+      font-family: var(--f-display);
+      font-size: 48px;
+      font-weight: 300;
+      color: var(--c-white);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .gate-logo span { color: var(--c-gold); font-style: italic; }
+
+    .gate-sub {
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--c-muted);
+      margin-bottom: 3rem;
+    }
+
+    .gate-line {
+      width: 40px;
+      height: 1px;
+      background: var(--c-gold);
+      margin: 0 auto 2.5rem;
+      opacity: 0.5;
+    }
+
+    .gate-label {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--c-faint);
+      margin-bottom: 1rem;
+    }
+
+    .gate-input {
+      width: 100%;
+      background: var(--c-surface);
+      border: 1px solid var(--c-border-m);
+      border-radius: var(--r-md);
+      padding: 1rem 1.25rem;
+      font-family: var(--f-body);
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--c-white);
+      text-align: center;
+      outline: none;
+      transition: border-color 0.3s;
+      margin-bottom: 1rem;
+    }
+
+    .gate-input::placeholder { color: var(--c-faint); }
+    .gate-input:focus { border-color: var(--c-gold); }
+
+    .gate-btn {
+      width: 100%;
+      padding: 1rem;
+      background: transparent;
+      border: 1px solid var(--c-gold);
+      border-radius: var(--r-md);
+      color: var(--c-gold);
+      font-family: var(--f-body);
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      font-weight: 400;
+      cursor: pointer;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    .gate-btn:hover { background: var(--c-gold); color: var(--c-black); }
+    .gate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .gate-error {
+      font-size: 11px;
+      color: #c06060;
+      letter-spacing: 0.15em;
+      margin-top: 1rem;
+      min-height: 18px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .gate-error.visible { opacity: 1; }
+
+    .gate-hint {
+      font-size: 11px;
+      color: var(--c-faint);
+      margin-top: 2.5rem;
+      letter-spacing: 0.1em;
+    }
+
+    .gate-bg {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(91,184,212,0.04) 0%, transparent 70%);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div id="page-transition" class="page-transition active"></div>
+  <div class="gate-bg"></div>
+
+  <div class="gate">
+    <div class="gate-logo">Tablette<br><span>Famille</span></div>
+    <div class="gate-sub">Application interne · Accès restreint</div>
+    <div class="gate-line"></div>
+    <div class="gate-label">Identifiants membres</div>
+
+    <input
+      id="gate-email"
+      class="gate-input"
+      type="email"
+      placeholder="pseudo@famille.rp"
+      autocomplete="off"
+    />
+    <input
+      id="gate-password"
+      class="gate-input"
+      type="password"
+      placeholder="Mot de passe"
+      autocomplete="off"
+    />
+    <button class="gate-btn" id="gate-btn">Accéder à la tablette</button>
+    <div class="gate-error" id="gate-error">Identifiants incorrects. Accès refusé.</div>
+    <div class="gate-hint">Réservé aux membres de la famille</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword }    from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyCZkJC56cCzq5qzrPV9_ndmJSEOvH9RGHw",
+      authDomain:        "famille-rp-db7b5.firebaseapp.com",
+      projectId:         "famille-rp-db7b5",
+      storageBucket:     "famille-rp-db7b5.firebasestorage.app",
+      messagingSenderId: "678859690728",
+      appId:             "1:678859690728:web:75d49f0763a6d3c5beef5d"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Thème
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+
+    // Fade in
+    const overlay = document.getElementById('page-transition');
+    setTimeout(() => overlay.classList.remove('active'), 50);
+
+    const emailInput = document.getElementById('gate-email');
+    const passInput  = document.getElementById('gate-password');
+    const btn        = document.getElementById('gate-btn');
+    const errMsg     = document.getElementById('gate-error');
+
+    const showError = (msg) => {
+      errMsg.textContent = msg || 'Identifiants incorrects. Accès refusé.';
+      errMsg.classList.add('visible');
+      passInput.value = '';
+      passInput.style.borderColor = '#c06060';
+      emailInput.style.borderColor = '#c06060';
+      setTimeout(() => {
+        passInput.style.borderColor = '';
+        emailInput.style.borderColor = '';
+        errMsg.classList.remove('visible');
+      }, 2500);
+    };
+
+    const attempt = async () => {
+      const email    = emailInput.value.trim();
+      const password = passInput.value.trim();
+      if (!email || !password) { showError('Remplis tous les champs.'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Connexion…';
+
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        sessionStorage.setItem('tablette-auth', '1');
+        sessionStorage.setItem('tablette-user', cred.user.displayName || email);
+        sessionStorage.setItem('tablette-uid', cred.user.uid);
+        overlay.classList.add('active');
+        setTimeout(() => { window.location.href = 'index.html'; }, 350);
+      } catch(e) {
+        btn.disabled = false;
+        btn.textContent = 'Accéder à la tablette';
+        showError('Identifiants incorrects. Accès refusé.');
+      }
+    };
+
+    btn.addEventListener('click', attempt);
+    passInput.addEventListener('keydown', e => { if (e.key === 'Enter') attempt(); });
+    emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') passInput.focus(); });
+  </script>
+</body>
+</html>
