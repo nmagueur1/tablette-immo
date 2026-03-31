@@ -66,7 +66,8 @@ function getWeekStart() {
 }
 
 function getTempsActifSemaine(m) {
-  const weekStart = getWeekStart();
+  // Priorité à debutSemaine (défini au dernier reset), sinon lundi de la semaine courante
+  const weekStart = m.debutSemaine || getWeekStart();
   let total = 0;
   for (const s of (m.sessions || [])) {
     if (s.fin && s.fin >= weekStart) total += s.fin - Math.max(s.debut, weekStart);
@@ -124,13 +125,17 @@ function changerStatut(id, nouveau) {
 
 function resetSemaine() {
   if (!confirm('Remettre tous les compteurs à zéro pour la nouvelle semaine ?')) return;
+  const now = Date.now();
   DB.membres.forEach(m => {
+    if (!m.sessions) m.sessions = [];
+    // Clôture la session en cours si active
     if (m.statut === 'actif' && m.sessionDebut) {
-      if (!m.sessions) m.sessions = [];
-      m.sessions.push({ debut: m.sessionDebut, fin: Date.now() });
+      m.sessions.push({ debut: m.sessionDebut, fin: now });
       m.sessionDebut = null;
+      m.statut = 'inactif';
     }
-    m.sessions = [];
+    // Marque le début de la nouvelle semaine (les sessions avant cette date sont "anciennes")
+    m.debutSemaine = now;
   });
   saveDB();
   renderMembres();
