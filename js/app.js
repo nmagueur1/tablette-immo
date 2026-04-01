@@ -34,7 +34,8 @@ const defaultDB = {
   ventes: [],
   votes: [],
   journal: [],
-  catalogue: []
+  catalogue: [],
+  avis: []
 };
 
 window.DB = {};

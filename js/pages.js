@@ -8,12 +8,17 @@ function renderDashboard() {
   const obj    = DB.finances.objectif;
   const pct    = obj > 0 ? Math.min(100, Math.round((caisse / obj) * 100)) : 0;
   const missionsActives = DB.missions.filter(m => !m.done).length;
-  const journalCount    = DB.journal.length;
 
-  document.getElementById('dash-membres').textContent  = actifs;
-  document.getElementById('dash-caisse').textContent   = fmtMoney(caisse);
-  document.getElementById('dash-missions').textContent = missionsActives;
-  document.getElementById('dash-journal').textContent  = journalCount;
+  // Note globale calculée depuis les avis
+  const avisArr    = DB.avis || [];
+  const noteGlobale = avisArr.length
+    ? (avisArr.reduce((s, a) => s + a.note, 0) / avisArr.length).toFixed(1)
+    : '—';
+
+  document.getElementById('dash-membres').textContent   = actifs;
+  document.getElementById('dash-caisse').textContent    = fmtMoney(caisse);
+  document.getElementById('dash-missions').textContent  = missionsActives;
+  document.getElementById('dash-note-globale').textContent = noteGlobale;
 
   const circ = 2 * Math.PI * 36;
   const ring = document.getElementById('dash-ring');
