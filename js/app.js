@@ -33,7 +33,8 @@ const defaultDB = {
   missions: [],
   ventes: [],
   votes: [],
-  journal: []
+  journal: [],
+  catalogue: []
 };
 
 window.DB = {};
@@ -99,6 +100,7 @@ const PAGE_TITLES = {
   finances:   'Caisse & Finances', missions:  'Objectifs & Missions',
   journal:    'Journal des actions',
   ventes:     'Ventes',            votes:     'Votes & Décisions',
+  catalogue:  'Catalogue Immobilier',
 };
 
 function renderPage(page) {
@@ -109,6 +111,7 @@ function renderPage(page) {
   if (page === 'journal')    window.renderJournal?.();
   if (page === 'ventes')     window.renderVentes?.();
   if (page === 'votes')      window.renderVotes?.();
+  if (page === 'catalogue')  window.renderCatalogue?.();
 }
 
 window.navigate = function(page) {

@@ -994,3 +994,224 @@ function closeFiche(e) {
 
 window.openFicheMembre = openFicheMembre;
 window.closeFiche      = closeFiche;
+
+/* ═══════════════════════════════════════════════════
+   CATALOGUE IMMOBILIER
+═══════════════════════════════════════════════════ */
+
+function statutBienTag(s) {
+  if (s === 'disponible') return 'green';
+  if (s === 'reserve')    return 'gold';
+  if (s === 'vendu')      return 'gray';
+  return 'gray';
+}
+
+function statutBienLabel(s) {
+  if (s === 'disponible') return 'Disponible';
+  if (s === 'reserve')    return 'Réservé';
+  if (s === 'vendu')      return 'Vendu';
+  return s || '—';
+}
+
+function renderCatalogue() {
+  if (!DB.catalogue) DB.catalogue = [];
+  const biens = DB.catalogue;
+
+  // Stats
+  const statsEl = document.getElementById('cat-stats');
+  if (statsEl) {
+    const nb   = biens.length;
+    const dispo = biens.filter(b => b.statut === 'disponible').length;
+    const reserve = biens.filter(b => b.statut === 'reserve').length;
+    const vendu = biens.filter(b => b.statut === 'vendu').length;
+    statsEl.innerHTML = `
+      <div class="stat-card"><div class="stat-label">Biens au catalogue</div><div class="stat-value">${nb}</div><div class="stat-sub">références</div></div>
+      <div class="stat-card"><div class="stat-label">Disponibles</div><div class="stat-value" style="color:var(--c-green)">${dispo}</div><div class="stat-sub">à vendre</div></div>
+      <div class="stat-card"><div class="stat-label">Réservés</div><div class="stat-value" style="color:var(--c-gold)">${reserve}</div><div class="stat-sub">en cours</div></div>
+      <div class="stat-card"><div class="stat-label">Vendus</div><div class="stat-value" style="color:var(--c-muted)">${vendu}</div><div class="stat-sub">finalisés</div></div>
+    `;
+  }
+
+  // Filtres
+  const search     = (document.getElementById('cat-search')?.value || '').toLowerCase();
+  const filterType = document.getElementById('cat-filter-type')?.value || '';
+  const filterStat = document.getElementById('cat-filter-statut')?.value || '';
+
+  let filtered = [...biens];
+  if (search)     filtered = filtered.filter(b => (b.titre + b.adresse + b.ref + b.type).toLowerCase().includes(search));
+  if (filterType) filtered = filtered.filter(b => b.type === filterType);
+  if (filterStat) filtered = filtered.filter(b => b.statut === filterStat);
+  filtered.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+  const grid = document.getElementById('cat-grid');
+  if (!grid) return;
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1;"><div class="empty-icon">🏢</div><div class="empty-text">${biens.length ? 'Aucun bien ne correspond aux filtres.' : 'Aucun bien dans le catalogue.'}</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(b => {
+    const tag   = statutBienTag(b.statut);
+    const label = statutBienLabel(b.statut);
+    const photo = b.photo || '';
+    const photoBg = photo
+      ? `background-image:url('${photo}');background-size:cover;background-position:center;`
+      : `background:var(--c-surface);display:flex;align-items:center;justify-content:center;`;
+    const photoContent = photo ? '' : `<span style="font-size:32px;opacity:0.3;">🏠</span>`;
+
+    return `
+    <div class="cat-card" onclick="ouvrirDetailBien('${b.id}')" style="cursor:pointer;">
+      <div class="cat-card-img" style="${photoBg}">${photoContent}</div>
+      <div class="cat-card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;">
+          <span class="tag tag-${tag}">${label}</span>
+          <span style="font-size:10px;color:var(--c-muted);letter-spacing:0.12em;">${b.ref || ''}</span>
+        </div>
+        <div class="cat-card-titre">${b.titre || '—'}</div>
+        <div class="cat-card-adresse">📍 ${b.adresse || '—'}</div>
+        <div style="display:flex;gap:1rem;margin:0.6rem 0;font-size:11px;color:var(--c-muted);">
+          ${b.surface ? `<span>⬛ ${b.surface} m²</span>` : ''}
+          ${b.pieces  ? `<span>🚪 ${b.pieces} pièces</span>` : ''}
+          <span style="margin-left:auto;font-family:var(--f-display);font-size:13px;color:var(--c-gold);">${b.type || ''}</span>
+        </div>
+        <div class="cat-card-prix">${b.prix ? fmtMoney(b.prix) : '—'}</div>
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;" class="patron-only">
+          <button class="btn-secondary" style="flex:1;font-size:11px;padding:0.35rem 0.5rem;" onclick="event.stopPropagation();editBien('${b.id}')">✏ Modifier</button>
+          <button class="btn-danger" style="font-size:11px;padding:0.35rem 0.5rem;" onclick="event.stopPropagation();deleteBien('${b.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function ouvrirDetailBien(id) {
+  const b = (DB.catalogue || []).find(x => x.id === id);
+  if (!b) return;
+
+  const tag   = statutBienTag(b.statut);
+  const label = statutBienLabel(b.statut);
+  const photo = b.photo || '';
+
+  const photoDiv = document.getElementById('bien-detail-photo');
+  if (photoDiv) {
+    photoDiv.style.backgroundImage = photo ? `url('${photo}')` : '';
+    photoDiv.style.background = photo ? '' : 'var(--c-surface)';
+    if (photo) { photoDiv.style.backgroundSize = 'cover'; photoDiv.style.backgroundPosition = 'center'; }
+  }
+
+  document.getElementById('bien-detail-ref').textContent = b.ref || '';
+  document.getElementById('bien-detail-titre').textContent = b.titre || '—';
+  document.getElementById('bien-detail-adresse').textContent = b.adresse ? '📍 ' + b.adresse : '';
+  document.getElementById('bien-detail-prix').textContent = b.prix ? fmtMoney(b.prix) : '—';
+  document.getElementById('bien-detail-description').textContent = b.description || '';
+
+  const badge = document.getElementById('bien-detail-statut-badge');
+  if (badge) {
+    badge.textContent = label;
+    const colors = { green: '#4a9068', gold: '#5bb8d4', gray: '#555' };
+    badge.style.background = colors[tag] || '#555';
+    badge.style.color = '#fff';
+  }
+
+  const specs = document.getElementById('bien-detail-specs');
+  if (specs) {
+    specs.innerHTML = [
+      b.type    ? `<span style="font-size:12px;color:var(--c-muted);">${b.type}</span>` : '',
+      b.surface ? `<span style="font-size:12px;color:var(--c-muted);">⬛ ${b.surface} m²</span>` : '',
+      b.pieces  ? `<span style="font-size:12px;color:var(--c-muted);">🚪 ${b.pieces} p.</span>` : '',
+    ].filter(Boolean).join('<span style="color:var(--c-faint);margin:0 4px;">·</span>');
+  }
+
+  const isPatron = document.body.classList.contains('is-patron');
+  const actions  = document.getElementById('bien-detail-actions');
+  if (actions) {
+    actions.innerHTML = isPatron
+      ? `<button class="btn-secondary" onclick="closeModal('modal-bien-detail');editBien('${b.id}')">✏ Modifier</button>
+         <button class="btn-danger" onclick="closeModal('modal-bien-detail');deleteBien('${b.id}')">✕ Supprimer</button>`
+      : `<button class="btn-secondary" onclick="closeModal('modal-bien-detail')">Fermer</button>`;
+  }
+
+  openModal('modal-bien-detail');
+}
+
+function newBien() {
+  document.getElementById('modal-bien-title').innerHTML = 'Nouveau <em>bien</em>';
+  ['bien-id','bien-ref','bien-titre','bien-adresse','bien-prix','bien-surface','bien-pieces','bien-description','bien-photo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('bien-type').value   = 'Appartement';
+  document.getElementById('bien-statut').value = 'disponible';
+  openModal('modal-bien');
+}
+
+function editBien(id) {
+  const b = (DB.catalogue || []).find(x => x.id === id);
+  if (!b) return;
+  document.getElementById('modal-bien-title').innerHTML = 'Modifier le <em>bien</em>';
+  document.getElementById('bien-id').value          = b.id;
+  document.getElementById('bien-ref').value         = b.ref || '';
+  document.getElementById('bien-titre').value       = b.titre || '';
+  document.getElementById('bien-adresse').value     = b.adresse || '';
+  document.getElementById('bien-prix').value        = b.prix || '';
+  document.getElementById('bien-surface').value     = b.surface || '';
+  document.getElementById('bien-pieces').value      = b.pieces || '';
+  document.getElementById('bien-description').value = b.description || '';
+  document.getElementById('bien-photo').value       = b.photo || '';
+  document.getElementById('bien-type').value        = b.type || 'Appartement';
+  document.getElementById('bien-statut').value      = b.statut || 'disponible';
+  openModal('modal-bien');
+}
+
+function saveBien() {
+  const titre = document.getElementById('bien-titre').value.trim();
+  if (!titre) { toast('Le titre est requis.'); return; }
+  if (!DB.catalogue) DB.catalogue = [];
+
+  const id  = document.getElementById('bien-id').value.trim();
+  const data = {
+    id:          id || uid(),
+    ref:         document.getElementById('bien-ref').value.trim(),
+    titre,
+    type:        document.getElementById('bien-type').value,
+    adresse:     document.getElementById('bien-adresse').value.trim(),
+    prix:        parseFloat(document.getElementById('bien-prix').value) || 0,
+    surface:     parseFloat(document.getElementById('bien-surface').value) || 0,
+    pieces:      parseInt(document.getElementById('bien-pieces').value) || 0,
+    description: document.getElementById('bien-description').value.trim(),
+    photo:       document.getElementById('bien-photo').value.trim(),
+    statut:      document.getElementById('bien-statut').value,
+    ts:          id ? (DB.catalogue.find(b => b.id === id)?.ts || Date.now()) : Date.now(),
+  };
+
+  if (id) {
+    const idx = DB.catalogue.findIndex(b => b.id === id);
+    if (idx !== -1) DB.catalogue[idx] = data;
+    toast('Bien mis à jour.');
+  } else {
+    DB.catalogue.push(data);
+    DB.journal.push({ id: uid(), ts: Date.now(), titre: `Bien ajouté : ${titre}`, contenu: `Ref: ${data.ref || '—'} — ${data.type} — ${fmtMoney(data.prix)}`, tags: ['immobilier'], auteur: 'Système' });
+    toast('Bien ajouté au catalogue.');
+  }
+  saveDB();
+  closeModal('modal-bien');
+  renderCatalogue();
+}
+
+function deleteBien(id) {
+  if (!confirm('Retirer ce bien du catalogue ?')) return;
+  const b = (DB.catalogue || []).find(x => x.id === id);
+  if (b) DB.journal.push({ id: uid(), ts: Date.now(), titre: `Bien retiré : ${b.titre}`, contenu: `Référence ${b.ref || '—'} retirée du catalogue.`, tags: ['immobilier'], auteur: 'Système' });
+  DB.catalogue = (DB.catalogue || []).filter(x => x.id !== id);
+  saveDB();
+  renderCatalogue();
+  toast('Bien retiré du catalogue.');
+}
+
+window.renderCatalogue = renderCatalogue;
+window.newBien         = newBien;
+window.editBien        = editBien;
+window.saveBien        = saveBien;
+window.deleteBien      = deleteBien;
+window.ouvrirDetailBien = ouvrirDetailBien;

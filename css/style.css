@@ -850,3 +850,45 @@ body:not(.is-patron) .patron-only { display: none !important; }
   padding: 1.5rem;
   letter-spacing: 0.05em;
 }
+
+/* ─── CATALOGUE IMMOBILIER ─────────────────────── */
+.cat-card {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color 0.25s, transform 0.25s;
+}
+.cat-card:hover {
+  border-color: var(--c-border-s);
+  transform: translateY(-2px);
+}
+.cat-card-img {
+  height: 160px;
+  background: var(--c-surface);
+  position: relative;
+  overflow: hidden;
+}
+.cat-card-body {
+  padding: 1rem 1.1rem 1rem;
+}
+.cat-card-titre {
+  font-family: var(--f-display);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--c-white);
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
+}
+.cat-card-adresse {
+  font-size: 12px;
+  color: var(--c-muted);
+  margin-bottom: 0.4rem;
+}
+.cat-card-prix {
+  font-family: var(--f-display);
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--c-gold);
+  margin-top: 0.25rem;
+}
