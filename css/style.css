@@ -19,8 +19,8 @@ input, textarea, select { font: inherit; }
   --c-white:   #f5f2ec;
   --c-muted:   #888880;
   --c-faint:   #444440;
-  --c-gold:    #5bb8d4;
-  --c-gold-l:  #a8dce8;
+  --c-gold:    #c9a96e;
+  --c-gold-l:  #e5ce9e;
   --c-blue:    #4a8fa8;
   --c-green:   #4a9068;
   --c-red:     #a84a4a;
@@ -43,8 +43,8 @@ input, textarea, select { font: inherit; }
   --c-white:   #1a1a18;
   --c-muted:   #777770;
   --c-faint:   #bbbbb5;
-  --c-gold:    #2a8aaa;
-  --c-gold-l:  #1a6a88;
+  --c-gold:    #8a6d2f;
+  --c-gold-l:  #6b5222;
   --c-blue:    #2a6a88;
   --c-green:   #2a7048;
   --c-red:     #882a2a;
@@ -637,9 +637,9 @@ body:not(.is-patron) .patron-only { display: none !important; }
   margin-top: 6px;
 }
 .role-badge.patron {
-  background: rgba(91,184,212,0.15);
+  background: rgba(201,169,110,0.15);
   color: var(--c-gold);
-  border: 1px solid rgba(91,184,212,0.3);
+  border: 1px solid rgba(201,169,110,0.3);
 }
 .role-badge.membre {
   background: rgba(136,136,128,0.12);

@@ -1114,7 +1114,7 @@ function ouvrirDetailBien(id) {
   const badge = document.getElementById('bien-detail-statut-badge');
   if (badge) {
     badge.textContent = label;
-    const colors = { green: '#4a9068', gold: '#5bb8d4', gray: '#555' };
+    const colors = { green: '#4a9068', gold: '#c9a96e', gray: '#555' };
     badge.style.background = colors[tag] || '#555';
     badge.style.color = '#fff';
   }
