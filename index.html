@@ -181,7 +181,7 @@
               <div class="section-head-title">Transactions</div>
               <div style="display:flex;gap:0.75rem;">
                 <button class="btn-secondary patron-only" onclick="openModal('modal-objectif')">⚙ Objectif</button>
-                <button class="btn-primary patron-only" onclick="openModal('modal-transaction')">+ Prestation</button>
+                <button class="btn-primary patron-only" onclick="openTransactionModal()">+ Prestation</button>
               </div>
             </div>
             <div class="table-wrap">
@@ -196,9 +196,9 @@
 
           <div>
             <div class="section-head">
-              <div class="section-head-title" style="font-size:18px;">Commissions <em>cumulées</em></div>
+              <div class="section-head-title" style="font-size:18px;">Commissions <em>par vendeur</em></div>
             </div>
-            <div style="font-size:11px;color:var(--c-muted);margin-bottom:1rem;">Total perçu sur l'ensemble des prestations · <span id="fin-nb-prest">0</span> prestation(s)</div>
+            <div style="font-size:11px;color:var(--c-muted);margin-bottom:1rem;">Seul le vendeur de chaque prestation touche · 20 % Patron · 10 % Agent · <span id="fin-nb-prest">0</span> prestation(s)</div>
             <div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--r-lg);overflow:hidden;">
               <div id="fin-split"></div>
             </div>
@@ -433,6 +433,10 @@
 
     <!-- Champs PRESTATION -->
     <div id="tx-prestation-fields">
+      <div class="form-group">
+        <label class="form-label">Vendeur</label>
+        <select class="form-select" id="tx-vendeur" onchange="recalcPrestation()"></select>
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Prix du bien ($)</label>
@@ -453,7 +457,7 @@
           <div id="tx-benef" style="font-family:var(--f-display);font-size:18px;color:var(--c-gold);">0 $</div>
         </div>
         <div>
-          <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--c-muted);margin-bottom:4px;">Commissions</div>
+          <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--c-muted);margin-bottom:4px;" id="tx-commi-label">Commission vendeur</div>
           <div id="tx-commi" style="font-family:var(--f-display);font-size:18px;color:var(--c-white);">0 $</div>
         </div>
       </div>
@@ -583,7 +587,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Vendeur</label>
-        <select class="form-select" id="vt-vendeur"></select>
+        <select class="form-select" id="vt-vendeur" onchange="recalcVente()"></select>
       </div>
     </div>
     <div class="form-row">

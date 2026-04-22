@@ -284,26 +284,30 @@ function renderFinances() {
   if (subEl) subEl.textContent = DB.finances.objectifLabel || 'à atteindre';
 
   // Somme des bénéfices de toutes les prestations enregistrées
-  const prestations   = (transactions || []).filter(t => t.type === 'prestation');
-  const totalBenefice = prestations.reduce((s, t) => s + (parseFloat(t.benefice) || 0), 0);
+  const prestations = (transactions || []).filter(t => t.type === 'prestation');
 
   const nbEl = document.getElementById('fin-nb-prest');
   if (nbEl) nbEl.textContent = prestations.length;
 
+  // Commission = uniquement pour le vendeur de chaque prestation
   const splitEl = document.getElementById('fin-split');
   if (splitEl) {
     splitEl.innerHTML = DB.membres.map(m => {
       const isPatron = (m.role || '').toLowerCase() === 'patron';
       const rate     = isPatron ? 0.20 : 0.10;
       const rateLbl  = isPatron ? '20 % · Patron' : '10 % · Agent';
-      const cumul    = totalBenefice * rate;
+      const memberKey = m.pseudo || m.nom;
+      // Ne cumule que les prestations où CE membre est le vendeur
+      const mesPrestas = prestations.filter(t => (t.vendeur || '') === memberKey);
+      const cumul = mesPrestas.reduce((s, t) => s + (parseFloat(t.benefice) || 0) * rate, 0);
+      const nb = mesPrestas.length;
       return `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;border-bottom:1px solid var(--c-border);background:var(--c-card);">
         <div style="display:flex;align-items:center;gap:0.75rem;">
           <div class="avatar">${m.initiales}</div>
           <div>
             <div style="font-size:13px;font-weight:500;">${m.nom}</div>
-            <div style="font-size:11px;color:var(--c-muted);">${rateLbl}</div>
+            <div style="font-size:11px;color:var(--c-muted);">${rateLbl} · ${nb} presta${nb>1?'s':''}</div>
           </div>
         </div>
         <div style="font-family:var(--f-display);font-size:20px;color:var(--c-gold);">${cumul > 0 ? fmtMoney(cumul) : '—'}</div>
@@ -349,6 +353,18 @@ function renderFinances() {
 }
 
 /* ── TRANSACTION MODAL helpers ───────────────────── */
+window.openTransactionModal = function() {
+  // Populate vendeur select from membres
+  const sel = document.getElementById('tx-vendeur');
+  if (sel) {
+    sel.innerHTML = (DB.membres || []).map(m => `<option value="${m.pseudo || m.nom}">${m.nom} (${m.role})</option>`).join('');
+  }
+  // Reset preview
+  ['tx-avance','tx-benef','tx-commi'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = '0 $'; });
+  openModal('modal-transaction');
+  toggleTxType();
+};
+
 window.toggleTxType = function() {
   const type = document.getElementById('tx-type').value;
   document.getElementById('tx-prestation-fields').style.display = (type === 'prestation') ? '' : 'none';
@@ -360,12 +376,20 @@ window.recalcPrestation = function() {
   const prixRevente = parseFloat(document.getElementById('tx-prix-revente').value) || 0;
   const avance   = prixBien * 0.5;
   const benefice = Math.max(0, prixRevente - avance);
-  const nbPatrons = DB.membres.filter(m => (m.role||'').toLowerCase() === 'patron').length;
-  const nbAgents  = DB.membres.filter(m => (m.role||'').toLowerCase() !== 'patron').length;
-  const commi = benefice * (0.20 * nbPatrons + 0.10 * nbAgents);
+
+  const vendeurKey = document.getElementById('tx-vendeur').value;
+  const vendeurM   = DB.membres.find(m => (m.pseudo || m.nom) === vendeurKey);
+  const isPatron   = vendeurM && (vendeurM.role || '').toLowerCase() === 'patron';
+  const rate       = isPatron ? 0.20 : 0.10;
+  const commi      = benefice * rate;
+
   document.getElementById('tx-avance').textContent = fmtMoney(avance);
   document.getElementById('tx-benef').textContent  = fmtMoney(benefice);
   document.getElementById('tx-commi').textContent  = fmtMoney(commi);
+  const lbl = document.getElementById('tx-commi-label');
+  if (lbl) lbl.textContent = vendeurM
+    ? `Commission ${isPatron?'20 %':'10 %'} · ${vendeurM.nom}`
+    : 'Commission vendeur';
 };
 
 function addTransaction() {
@@ -377,28 +401,30 @@ function addTransaction() {
   if (type === 'prestation') {
     const prixBien    = parseFloat(document.getElementById('tx-prix-bien').value);
     const prixRevente = parseFloat(document.getElementById('tx-prix-revente').value);
+    const vendeur     = document.getElementById('tx-vendeur').value;
     if (isNaN(prixBien) || prixBien <= 0 || isNaN(prixRevente) || prixRevente <= 0) {
       toast('Prix du bien et prix de revente requis.'); return;
     }
+    if (!vendeur) { toast('Choisis un vendeur.'); return; }
     const avance   = prixBien * 0.5;
     const benefice = Math.max(0, prixRevente - avance);
+
+    const vendeurM = DB.membres.find(m => (m.pseudo || m.nom) === vendeur);
+    const isPatron = vendeurM && (vendeurM.role || '').toLowerCase() === 'patron';
+    const rate     = isPatron ? 0.20 : 0.10;
+    const commi    = benefice * rate;
 
     DB.finances.transactions.push({
       id: uid(), label, type: 'prestation',
       prixBien, prixRevente, avance, benefice,
-      montant: benefice, note, ts: Date.now()
+      montant: benefice, vendeur, note, ts: Date.now()
     });
     DB.finances.caisse += benefice;
-
-    const nbPatrons = DB.membres.filter(m => (m.role||'').toLowerCase() === 'patron').length;
-    const nbAgents  = DB.membres.filter(m => (m.role||'').toLowerCase() !== 'patron').length;
-    const partPatron = benefice * 0.20;
-    const partAgent  = benefice * 0.10;
 
     DB.journal.push({
       id: uid(), ts: Date.now(),
       titre: `Prestation : ${label}`,
-      contenu: `Bien ${fmtMoney(prixBien)} · avance ${fmtMoney(avance)} · revente ${fmtMoney(prixRevente)} → bénéfice ${fmtMoney(benefice)}. Commissions : ${fmtMoney(partPatron)} par Patron (x${nbPatrons}) · ${fmtMoney(partAgent)} par Agent (x${nbAgents})${note ? ' — ' + note : ''}`,
+      contenu: `Bien ${fmtMoney(prixBien)} · avance ${fmtMoney(avance)} · revente ${fmtMoney(prixRevente)} → bénéfice ${fmtMoney(benefice)}. Vendeur : ${vendeur} → commission ${fmtMoney(commi)} (${isPatron?'20 %':'10 %'})${note ? ' — ' + note : ''}`,
       tags: ['finances','prestation'], auteur: 'Système'
     });
   } else {
@@ -692,9 +718,13 @@ window.recalcVente = function() {
   const prixRevente = parseFloat(document.getElementById('vt-montant').value)    || 0;
   const avance   = prixAchat * 0.5;
   const benefice = Math.max(0, prixRevente - avance);
-  const nbPatrons = DB.membres.filter(m => (m.role||'').toLowerCase() === 'patron').length;
-  const nbAgents  = DB.membres.filter(m => (m.role||'').toLowerCase() !== 'patron').length;
-  const commi = benefice * (0.20 * nbPatrons + 0.10 * nbAgents);
+
+  const vendeurKey = document.getElementById('vt-vendeur').value;
+  const vendeurM   = DB.membres.find(m => (m.pseudo || m.nom) === vendeurKey);
+  const isPatron   = vendeurM && (vendeurM.role || '').toLowerCase() === 'patron';
+  const rate       = isPatron ? 0.20 : 0.10;
+  const commi      = benefice * rate;
+
   document.getElementById('vt-avance').textContent = fmtMoney(avance);
   document.getElementById('vt-benef').textContent  = fmtMoney(benefice);
   document.getElementById('vt-commi').textContent  = fmtMoney(commi);
@@ -744,12 +774,14 @@ window.saveVente = function() {
   });
   DB.finances.caisse += benefice;
 
-  const nbPatrons = DB.membres.filter(m => (m.role||'').toLowerCase() === 'patron').length;
-  const nbAgents  = DB.membres.filter(m => (m.role||'').toLowerCase() !== 'patron').length;
+  const vendeurM = DB.membres.find(m => (m.pseudo || m.nom) === vendeur);
+  const isPatron = vendeurM && (vendeurM.role || '').toLowerCase() === 'patron';
+  const rate     = isPatron ? 0.20 : 0.10;
+  const commi    = benefice * rate;
   DB.journal.push({
     id: uid(), ts: Date.now(),
     titre: `Prestation : ${bien}`,
-    contenu: `${vendeur} a signé la prestation "${bien}". Achat ${fmtMoney(prixAchat)} · avance ${fmtMoney(avance)} · revente ${fmtMoney(prixRevente)} → bénéfice ${fmtMoney(benefice)}. Commissions : ${fmtMoney(benefice*0.20)}/Patron (×${nbPatrons}) · ${fmtMoney(benefice*0.10)}/Agent (×${nbAgents}).`,
+    contenu: `${vendeur} a signé la prestation "${bien}". Achat ${fmtMoney(prixAchat)} · avance ${fmtMoney(avance)} · revente ${fmtMoney(prixRevente)} → bénéfice ${fmtMoney(benefice)}. Commission vendeur : ${fmtMoney(commi)} (${isPatron?'20 %':'10 %'}).`,
     tags: ['vente','prestation'], auteur: 'Système'
   });
   saveDB();
