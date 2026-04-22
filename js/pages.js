@@ -283,15 +283,20 @@ function renderFinances() {
   const subEl = document.getElementById('fin-objectif-sub');
   if (subEl) subEl.textContent = DB.finances.objectifLabel || 'à atteindre';
 
+  // Somme des bénéfices de toutes les prestations enregistrées
+  const prestations   = (transactions || []).filter(t => t.type === 'prestation');
+  const totalBenefice = prestations.reduce((s, t) => s + (parseFloat(t.benefice) || 0), 0);
+
+  const nbEl = document.getElementById('fin-nb-prest');
+  if (nbEl) nbEl.textContent = prestations.length;
+
   const splitEl = document.getElementById('fin-split');
   if (splitEl) {
-    const simuEl = document.getElementById('fin-simu-benef');
-    const benef = simuEl ? (parseFloat(simuEl.value) || 0) : 0;
     splitEl.innerHTML = DB.membres.map(m => {
       const isPatron = (m.role || '').toLowerCase() === 'patron';
       const rate     = isPatron ? 0.20 : 0.10;
       const rateLbl  = isPatron ? '20 % · Patron' : '10 % · Agent';
-      const share    = benef * rate;
+      const cumul    = totalBenefice * rate;
       return `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;border-bottom:1px solid var(--c-border);background:var(--c-card);">
         <div style="display:flex;align-items:center;gap:0.75rem;">
@@ -301,7 +306,7 @@ function renderFinances() {
             <div style="font-size:11px;color:var(--c-muted);">${rateLbl}</div>
           </div>
         </div>
-        <div style="font-family:var(--f-display);font-size:20px;color:var(--c-gold);">${benef > 0 ? fmtMoney(share) : '—'}</div>
+        <div style="font-family:var(--f-display);font-size:20px;color:var(--c-gold);">${cumul > 0 ? fmtMoney(cumul) : '—'}</div>
       </div>`;
     }).join('');
   }
@@ -310,44 +315,118 @@ function renderFinances() {
   if (txEl) {
     const sorted = [...transactions].sort((a,b) => b.ts - a.ts).slice(0,20);
     txEl.innerHTML = !sorted.length
-      ? `<tr><td colspan="4"><div class="empty"><div class="empty-icon">💸</div><div class="empty-text">Aucune transaction</div></div></td></tr>`
-      : sorted.map(t => `
-        <tr>
-          <td style="color:var(--c-muted);font-size:12px;">${fmtDate(t.ts)}</td>
-          <td>${t.label}</td>
-          <td><span class="tag tag-${t.type==='entree'?'green':'red'}">${t.type==='entree'?'Entrée':'Sortie'}</span></td>
-          <td style="font-family:var(--f-display);font-size:18px;color:${t.type==='entree'?'var(--c-green)':'var(--c-red)'};">
-            ${t.type==='entree'?'+':'−'}${fmtMoney(Math.abs(t.montant))}
-          </td>
-          <td><button class="btn-danger patron-only" onclick="deleteTransaction('${t.id}')">✕</button></td>
-        </tr>`).join('');
+      ? `<tr><td colspan="5"><div class="empty"><div class="empty-icon">💸</div><div class="empty-text">Aucune transaction</div></div></td></tr>`
+      : sorted.map(t => {
+          if (t.type === 'prestation') {
+            return `
+              <tr>
+                <td style="color:var(--c-muted);font-size:12px;">${fmtDate(t.ts)}</td>
+                <td>
+                  ${t.label}
+                  <div style="font-size:10px;color:var(--c-muted);margin-top:2px;">
+                    Bien ${fmtMoney(t.prixBien||0)} · Revente ${fmtMoney(t.prixRevente||0)} · Bénéfice ${fmtMoney(t.benefice||0)}
+                  </div>
+                </td>
+                <td><span class="tag" style="background:var(--c-gold);color:#000;">Prestation</span></td>
+                <td style="font-family:var(--f-display);font-size:18px;color:var(--c-green);">
+                  +${fmtMoney(t.benefice||0)}
+                </td>
+                <td><button class="btn-danger patron-only" onclick="deleteTransaction('${t.id}')">✕</button></td>
+              </tr>`;
+          }
+          return `
+            <tr>
+              <td style="color:var(--c-muted);font-size:12px;">${fmtDate(t.ts)}</td>
+              <td>${t.label}</td>
+              <td><span class="tag tag-${t.type==='entree'?'green':'red'}">${t.type==='entree'?'Entrée':'Sortie'}</span></td>
+              <td style="font-family:var(--f-display);font-size:18px;color:${t.type==='entree'?'var(--c-green)':'var(--c-red)'};">
+                ${t.type==='entree'?'+':'−'}${fmtMoney(Math.abs(t.montant))}
+              </td>
+              <td><button class="btn-danger patron-only" onclick="deleteTransaction('${t.id}')">✕</button></td>
+            </tr>`;
+        }).join('');
   }
 }
 
+/* ── TRANSACTION MODAL helpers ───────────────────── */
+window.toggleTxType = function() {
+  const type = document.getElementById('tx-type').value;
+  document.getElementById('tx-prestation-fields').style.display = (type === 'prestation') ? '' : 'none';
+  document.getElementById('tx-libre-fields').style.display       = (type === 'prestation') ? 'none' : '';
+};
+
+window.recalcPrestation = function() {
+  const prixBien    = parseFloat(document.getElementById('tx-prix-bien').value)    || 0;
+  const prixRevente = parseFloat(document.getElementById('tx-prix-revente').value) || 0;
+  const avance   = prixBien * 0.5;
+  const benefice = Math.max(0, prixRevente - avance);
+  const nbPatrons = DB.membres.filter(m => (m.role||'').toLowerCase() === 'patron').length;
+  const nbAgents  = DB.membres.filter(m => (m.role||'').toLowerCase() !== 'patron').length;
+  const commi = benefice * (0.20 * nbPatrons + 0.10 * nbAgents);
+  document.getElementById('tx-avance').textContent = fmtMoney(avance);
+  document.getElementById('tx-benef').textContent  = fmtMoney(benefice);
+  document.getElementById('tx-commi').textContent  = fmtMoney(commi);
+};
+
 function addTransaction() {
-  const label   = document.getElementById('tx-label').value.trim();
-  const montant = parseFloat(document.getElementById('tx-montant').value);
-  const type    = document.getElementById('tx-type').value;
-  const note    = document.getElementById('tx-note').value.trim();
-  if (!label || isNaN(montant) || montant <= 0) { toast('Remplis tous les champs.'); return; }
+  const label = document.getElementById('tx-label').value.trim();
+  const type  = document.getElementById('tx-type').value;
+  const note  = document.getElementById('tx-note').value.trim();
+  if (!label) { toast('Ajoute un libellé.'); return; }
 
-  DB.finances.transactions.push({ id: uid(), label, montant, type, note, ts: Date.now() });
-  if (type === 'entree') DB.finances.caisse += montant;
-  else                   DB.finances.caisse -= montant;
+  if (type === 'prestation') {
+    const prixBien    = parseFloat(document.getElementById('tx-prix-bien').value);
+    const prixRevente = parseFloat(document.getElementById('tx-prix-revente').value);
+    if (isNaN(prixBien) || prixBien <= 0 || isNaN(prixRevente) || prixRevente <= 0) {
+      toast('Prix du bien et prix de revente requis.'); return;
+    }
+    const avance   = prixBien * 0.5;
+    const benefice = Math.max(0, prixRevente - avance);
 
-  DB.journal.push({
-    id: uid(), ts: Date.now(),
-    titre: `Transaction : ${label}`,
-    contenu: `${type === 'entree' ? 'Entrée' : 'Sortie'} de ${fmtMoney(montant)}${note ? ' — ' + note : ''}`,
-    tags: ['finances'], auteur: 'Système'
-  });
+    DB.finances.transactions.push({
+      id: uid(), label, type: 'prestation',
+      prixBien, prixRevente, avance, benefice,
+      montant: benefice, note, ts: Date.now()
+    });
+    DB.finances.caisse += benefice;
+
+    const nbPatrons = DB.membres.filter(m => (m.role||'').toLowerCase() === 'patron').length;
+    const nbAgents  = DB.membres.filter(m => (m.role||'').toLowerCase() !== 'patron').length;
+    const partPatron = benefice * 0.20;
+    const partAgent  = benefice * 0.10;
+
+    DB.journal.push({
+      id: uid(), ts: Date.now(),
+      titre: `Prestation : ${label}`,
+      contenu: `Bien ${fmtMoney(prixBien)} · avance ${fmtMoney(avance)} · revente ${fmtMoney(prixRevente)} → bénéfice ${fmtMoney(benefice)}. Commissions : ${fmtMoney(partPatron)} par Patron (x${nbPatrons}) · ${fmtMoney(partAgent)} par Agent (x${nbAgents})${note ? ' — ' + note : ''}`,
+      tags: ['finances','prestation'], auteur: 'Système'
+    });
+  } else {
+    const montant = parseFloat(document.getElementById('tx-montant').value);
+    if (isNaN(montant) || montant <= 0) { toast('Montant invalide.'); return; }
+    DB.finances.transactions.push({ id: uid(), label, montant, type, note, ts: Date.now() });
+    if (type === 'entree') DB.finances.caisse += montant;
+    else                   DB.finances.caisse -= montant;
+    DB.journal.push({
+      id: uid(), ts: Date.now(),
+      titre: `Transaction : ${label}`,
+      contenu: `${type === 'entree' ? 'Entrée' : 'Sortie'} de ${fmtMoney(montant)}${note ? ' — ' + note : ''}`,
+      tags: ['finances'], auteur: 'Système'
+    });
+  }
 
   saveDB();
   closeModal('modal-transaction');
   renderFinances();
   toast('Transaction enregistrée.');
-  ['tx-label','tx-montant','tx-note'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('tx-type').value = 'entree';
+  ['tx-label','tx-montant','tx-note','tx-prix-bien','tx-prix-revente'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  ['tx-avance','tx-benef','tx-commi'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = '0 $';
+  });
+  document.getElementById('tx-type').value = 'prestation';
+  toggleTxType();
 }
 
 function updateObjectif() {
@@ -534,8 +613,9 @@ function deleteTransaction(id) {
   if (!confirm('Supprimer cette transaction ?')) return;
   const t = DB.finances.transactions.find(x => x.id === id);
   if (t) {
-    if (t.type === 'entree') DB.finances.caisse -= t.montant;
-    else                     DB.finances.caisse += t.montant;
+    if (t.type === 'prestation')  DB.finances.caisse -= (parseFloat(t.benefice) || 0);
+    else if (t.type === 'entree') DB.finances.caisse -= t.montant;
+    else                          DB.finances.caisse += t.montant;
   }
   DB.finances.transactions = DB.finances.transactions.filter(x => x.id !== id);
   saveDB();

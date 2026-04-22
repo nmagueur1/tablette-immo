@@ -181,7 +181,7 @@
               <div class="section-head-title">Transactions</div>
               <div style="display:flex;gap:0.75rem;">
                 <button class="btn-secondary patron-only" onclick="openModal('modal-objectif')">⚙ Objectif</button>
-                <button class="btn-primary patron-only" onclick="openModal('modal-transaction')">+ Transaction</button>
+                <button class="btn-primary patron-only" onclick="openModal('modal-transaction')">+ Prestation</button>
               </div>
             </div>
             <div class="table-wrap">
@@ -196,16 +196,9 @@
 
           <div>
             <div class="section-head">
-              <div class="section-head-title" style="font-size:18px;">Commissions <em>par prestation</em></div>
+              <div class="section-head-title" style="font-size:18px;">Commissions <em>cumulées</em></div>
             </div>
-            <div style="font-size:11px;color:var(--c-muted);margin-bottom:1rem;">20 % du bénéfice par Patron · 10 % par Agent</div>
-            <div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--r-lg);padding:1rem;margin-bottom:1rem;">
-              <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--c-muted);margin-bottom:0.5rem;">Simuler une prestation</div>
-              <div style="display:flex;gap:0.5rem;align-items:center;">
-                <input type="number" id="fin-simu-benef" class="form-input" placeholder="Bénéfice $" style="flex:1;padding:0.5rem 0.75rem;font-size:13px;"/>
-                <button class="btn-secondary" onclick="renderFinances()" style="padding:0.5rem 0.9rem;">Calculer</button>
-              </div>
-            </div>
+            <div style="font-size:11px;color:var(--c-muted);margin-bottom:1rem;">Total perçu sur l'ensemble des prestations · <span id="fin-nb-prest">0</span> prestation(s)</div>
             <div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--r-lg);overflow:hidden;">
               <div id="fin-split"></div>
             </div>
@@ -427,21 +420,53 @@
     <div class="modal-title">Nouvelle <em>transaction</em></div>
     <div class="form-group">
       <label class="form-label">Libellé</label>
-      <input class="form-input" id="tx-label" placeholder="Ex : Vente appartement Vinewood" />
+      <input class="form-input" id="tx-label" placeholder="Ex : Villa Vinewood · client Martinez" />
     </div>
-    <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-select" id="tx-type" onchange="toggleTxType()">
+        <option value="prestation">Prestation immobilière</option>
+        <option value="entree">Entrée libre</option>
+        <option value="sortie">Sortie libre</option>
+      </select>
+    </div>
+
+    <!-- Champs PRESTATION -->
+    <div id="tx-prestation-fields">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Prix du bien ($)</label>
+          <input class="form-input" id="tx-prix-bien" type="number" min="0" placeholder="100000" oninput="recalcPrestation()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prix de revente ($)</label>
+          <input class="form-input" id="tx-prix-revente" type="number" min="0" placeholder="100000" oninput="recalcPrestation()" />
+        </div>
+      </div>
+      <div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--r-lg);padding:1rem;margin-bottom:1rem;display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;text-align:center;">
+        <div>
+          <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--c-muted);margin-bottom:4px;">Avance 50 %</div>
+          <div id="tx-avance" style="font-family:var(--f-display);font-size:18px;color:var(--c-white);">0 $</div>
+        </div>
+        <div>
+          <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--c-muted);margin-bottom:4px;">Bénéfice net</div>
+          <div id="tx-benef" style="font-family:var(--f-display);font-size:18px;color:var(--c-gold);">0 $</div>
+        </div>
+        <div>
+          <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--c-muted);margin-bottom:4px;">Commissions</div>
+          <div id="tx-commi" style="font-family:var(--f-display);font-size:18px;color:var(--c-white);">0 $</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Champs ENTREE / SORTIE -->
+    <div id="tx-libre-fields" style="display:none;">
       <div class="form-group">
         <label class="form-label">Montant ($)</label>
         <input class="form-input" id="tx-montant" type="number" min="0" placeholder="50000" />
       </div>
-      <div class="form-group">
-        <label class="form-label">Type</label>
-        <select class="form-select" id="tx-type">
-          <option value="entree">Entrée</option>
-          <option value="sortie">Sortie</option>
-        </select>
-      </div>
     </div>
+
     <div class="form-group">
       <label class="form-label">Note (optionnel)</label>
       <input class="form-input" id="tx-note" placeholder="Précisions…" />
