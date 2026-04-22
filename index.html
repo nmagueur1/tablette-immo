@@ -582,19 +582,37 @@
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Montant ($)</label>
-        <input class="form-input" type="number" id="vt-montant" placeholder="250000" min="0" />
+        <label class="form-label">Vendeur</label>
+        <select class="form-select" id="vt-vendeur"></select>
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Vendeur</label>
-        <select class="form-select" id="vt-vendeur"></select>
+        <label class="form-label">Prix d'achat du bien ($)</label>
+        <input class="form-input" type="number" id="vt-prix-achat" placeholder="100000" min="0" oninput="recalcVente()" />
       </div>
       <div class="form-group">
-        <label class="form-label">Acheteur</label>
-        <input class="form-input" id="vt-acheteur" placeholder="Nom de l'acheteur" />
+        <label class="form-label">Prix de revente ($)</label>
+        <input class="form-input" type="number" id="vt-montant" placeholder="100000" min="0" oninput="recalcVente()" />
       </div>
+    </div>
+    <div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--r-lg);padding:1rem;margin-bottom:1rem;display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;text-align:center;">
+      <div>
+        <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--c-muted);margin-bottom:4px;">Avance 50 %</div>
+        <div id="vt-avance" style="font-family:var(--f-display);font-size:18px;color:var(--c-white);">0 $</div>
+      </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--c-muted);margin-bottom:4px;">Bénéfice net</div>
+        <div id="vt-benef" style="font-family:var(--f-display);font-size:18px;color:var(--c-gold);">0 $</div>
+      </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--c-muted);margin-bottom:4px;">Commissions</div>
+        <div id="vt-commi" style="font-family:var(--f-display);font-size:18px;color:var(--c-white);">0 $</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Acheteur</label>
+      <input class="form-input" id="vt-acheteur" placeholder="Nom de l'acheteur" />
     </div>
     <div class="form-group">
       <label class="form-label">Note interne</label>

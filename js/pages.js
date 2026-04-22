@@ -677,7 +677,8 @@ function renderVentes() {
 }
 
 function newVente() {
-  ['vt-id','vt-bien','vt-montant','vt-acheteur','vt-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  ['vt-id','vt-bien','vt-montant','vt-prix-achat','vt-acheteur','vt-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  ['vt-avance','vt-benef','vt-commi'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = '0 $'; });
   document.getElementById('vt-type').value = 'Appartement';
   // Populate vendeur select from membres
   const sel = document.getElementById('vt-vendeur');
@@ -686,17 +687,41 @@ function newVente() {
   openModal('modal-vente');
 }
 
+window.recalcVente = function() {
+  const prixAchat   = parseFloat(document.getElementById('vt-prix-achat').value) || 0;
+  const prixRevente = parseFloat(document.getElementById('vt-montant').value)    || 0;
+  const avance   = prixAchat * 0.5;
+  const benefice = Math.max(0, prixRevente - avance);
+  const nbPatrons = DB.membres.filter(m => (m.role||'').toLowerCase() === 'patron').length;
+  const nbAgents  = DB.membres.filter(m => (m.role||'').toLowerCase() !== 'patron').length;
+  const commi = benefice * (0.20 * nbPatrons + 0.10 * nbAgents);
+  document.getElementById('vt-avance').textContent = fmtMoney(avance);
+  document.getElementById('vt-benef').textContent  = fmtMoney(benefice);
+  document.getElementById('vt-commi').textContent  = fmtMoney(commi);
+};
+
 window.saveVente = function() {
   const bien    = document.getElementById('vt-bien').value.trim();
   if (!bien) { toast('Le nom du bien est requis.'); return; }
-  const montant = parseFloat(document.getElementById('vt-montant').value) || 0;
-  const vendeur = document.getElementById('vt-vendeur').value;
+  const prixAchat   = parseFloat(document.getElementById('vt-prix-achat').value);
+  const prixRevente = parseFloat(document.getElementById('vt-montant').value);
+  if (isNaN(prixAchat) || prixAchat <= 0 || isNaN(prixRevente) || prixRevente <= 0) {
+    toast("Prix d'achat et prix de revente requis."); return;
+  }
+  const avance   = prixAchat * 0.5;
+  const benefice = Math.max(0, prixRevente - avance);
+  const vendeur  = document.getElementById('vt-vendeur').value;
+
   const data = {
     id:       uid(),
     ts:       Date.now(),
     bien,
     type:     document.getElementById('vt-type').value,
-    montant,
+    prixAchat,
+    prixRevente,
+    avance,
+    benefice,
+    montant:  benefice,
     vendeur,
     acheteur: document.getElementById('vt-acheteur').value.trim(),
     note:     document.getElementById('vt-note').value.trim(),
@@ -704,26 +729,54 @@ window.saveVente = function() {
   if (!DB.ventes) DB.ventes = [];
   DB.ventes.push(data);
 
-  // Ajoute automatiquement une transaction en caisse
+  // Ajoute automatiquement une prestation dans les finances (commissions déclenchées)
   if (!DB.finances.transactions) DB.finances.transactions = [];
-  DB.finances.transactions.push({ id: uid(), ts: Date.now(), label: `Vente : ${bien}`, montant, type: 'entree', note: `Vendeur : ${vendeur}` });
-  DB.finances.caisse += montant;
+  DB.finances.transactions.push({
+    id: uid(), ts: Date.now(),
+    label: `Prestation : ${bien}`,
+    type: 'prestation',
+    prixBien: prixAchat,
+    prixRevente,
+    avance,
+    benefice,
+    montant: benefice,
+    note: `Vendeur : ${vendeur}`
+  });
+  DB.finances.caisse += benefice;
 
-  DB.journal.push({ id: uid(), ts: Date.now(), titre: `Vente : ${bien}`, contenu: `${vendeur} a vendu "${bien}" pour ${fmtMoney(montant)}.`, tags: ['vente'], auteur: 'Système' });
+  const nbPatrons = DB.membres.filter(m => (m.role||'').toLowerCase() === 'patron').length;
+  const nbAgents  = DB.membres.filter(m => (m.role||'').toLowerCase() !== 'patron').length;
+  DB.journal.push({
+    id: uid(), ts: Date.now(),
+    titre: `Prestation : ${bien}`,
+    contenu: `${vendeur} a signé la prestation "${bien}". Achat ${fmtMoney(prixAchat)} · avance ${fmtMoney(avance)} · revente ${fmtMoney(prixRevente)} → bénéfice ${fmtMoney(benefice)}. Commissions : ${fmtMoney(benefice*0.20)}/Patron (×${nbPatrons}) · ${fmtMoney(benefice*0.10)}/Agent (×${nbAgents}).`,
+    tags: ['vente','prestation'], auteur: 'Système'
+  });
   saveDB();
   closeModal('modal-vente');
   renderVentes();
   if (typeof renderFinances === 'function') renderFinances();
-  toast('Vente enregistrée.');
+  toast(`Prestation enregistrée · bénéfice ${fmtMoney(benefice)}`);
 };
 
 window.deleteVente = function(id) {
   if (!confirm('Supprimer cette vente ?')) return;
   const v = (DB.ventes || []).find(x => x.id === id);
-  if (v) DB.journal.push({ id: uid(), ts: Date.now(), titre: `Vente supprimée : ${v.bien}`, contenu: `Vente de "${v.bien}" retirée.`, tags: ['vente'], auteur: 'Système' });
+  if (v) {
+    // Retire la prestation correspondante des transactions et débite la caisse
+    const benef = parseFloat(v.benefice) || 0;
+    if (benef > 0) {
+      DB.finances.caisse -= benef;
+      DB.finances.transactions = (DB.finances.transactions || []).filter(t =>
+        !(t.type === 'prestation' && t.label === `Prestation : ${v.bien}` && parseFloat(t.benefice) === benef)
+      );
+    }
+    DB.journal.push({ id: uid(), ts: Date.now(), titre: `Vente supprimée : ${v.bien}`, contenu: `Vente de "${v.bien}" retirée (caisse débitée de ${fmtMoney(benef)}).`, tags: ['vente'], auteur: 'Système' });
+  }
   DB.ventes = (DB.ventes || []).filter(x => x.id !== id);
   saveDB();
   renderVentes();
+  if (typeof renderFinances === 'function') renderFinances();
   toast('Vente supprimée.');
 };
 
