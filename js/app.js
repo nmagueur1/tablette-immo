@@ -17,19 +17,19 @@ const firebaseConfig = {
 
 const fireApp = initializeApp(firebaseConfig);
 const db      = getFirestore(fireApp);
-const REF     = doc(db, 'famille', 'main');
+const REF     = doc(db, 'wj-realty', 'main');
 
 /* ── DEFAULT DATA ──────────────────────────────────── */
 const defaultDB = {
-  meta: { nom: '[Nom de famille]', updated: Date.now() },
+  meta: { nom: 'W&J Realty', updated: Date.now() },
   membres: [
-    { id: 1, initiales:'P1', nom:'Patron 1', pseudo:'[Pseudo]', role:'Patron', statut:'actif', parts:'..%', note:'' },
-    { id: 2, initiales:'P2', nom:'Patron 2', pseudo:'[Pseudo]', role:'Patron', statut:'actif', parts:'..%', note:'' },
-    { id: 3, initiales:'M3', nom:'Membre 3', pseudo:'[Pseudo]', role:'Membre', statut:'actif', parts:'..%', note:'' },
-    { id: 4, initiales:'M4', nom:'Membre 4', pseudo:'[Pseudo]', role:'Membre', statut:'actif', parts:'..%', note:'' },
-    { id: 5, initiales:'M5', nom:'Membre 5', pseudo:'[Pseudo]', role:'Membre', statut:'actif', parts:'..%', note:'' },
+    { id: 1, initiales:'ES', nom:'Elijah Smith',   pseudo:'[Pseudo]', role:'Patron', statut:'actif', parts:'25%', note:'Fondateur · hommage à Jack Smith' },
+    { id: 2, initiales:'[C]', nom:'[Prénom] Carter', pseudo:'[Pseudo]', role:'Patron', statut:'actif', parts:'25%', note:'Co-Patron · hommage à William Carter' },
+    { id: 3, initiales:'A1', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent',  statut:'actif', parts:'..%', note:'' },
+    { id: 4, initiales:'A2', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent',  statut:'actif', parts:'..%', note:'' },
+    { id: 5, initiales:'A3', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent',  statut:'actif', parts:'..%', note:'' },
   ],
-  finances: { caisse: 0, objectif: 500000, objectifLabel: 'Rachat des parts', transactions: [] },
+  finances: { caisse: 0, objectif: 500000, objectifLabel: 'Coffre de l\'alliance', transactions: [] },
   missions: [],
   ventes: [],
   votes: [],
@@ -158,7 +158,7 @@ function startClock() {
 /* ── DÉTECTION DU RÔLE ─────────────────────────────── */
 function detectRole() {
   const raw    = sessionStorage.getItem('tablette-user') || '';
-  // Le displayName stocké est le pseudo (ex: "MasonKnox") ou l'email ("mason.knox@famille.rp")
+  // Le displayName stocké est le pseudo (ex: "ElijahSmith") ou l'email ("elijah.smith@wjrealty.rp")
   const pseudo = raw.includes('@') ? raw.split('@')[0].replace(/\./g, ' ') : raw;
   const p      = pseudo.toLowerCase().trim();
 

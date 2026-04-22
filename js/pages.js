@@ -252,7 +252,7 @@ function saveMembre() {
     DB.journal.push({ id: uid(), ts: Date.now(), titre: `Membre modifié : ${nom}`, contenu: `Rôle : ${data.role} · Parts : ${data.parts} · Statut : ${data.statut}${data.note ? ' · Note : ' + data.note : ''}`, tags: ['membre'], auteur: 'Système' });
   } else {
     DB.membres.push({ id: Date.now(), ...data });
-    DB.journal.push({ id: uid(), ts: Date.now(), titre: `Nouveau membre : ${nom}`, contenu: `${data.pseudo} a rejoint la famille. Rôle : ${data.role} · Parts : ${data.parts}`, tags: ['membre'], auteur: 'Système' });
+    DB.journal.push({ id: uid(), ts: Date.now(), titre: `Nouveau membre : ${nom}`, contenu: `${data.pseudo} a rejoint l'alliance. Rôle : ${data.role} · Parts : ${data.parts}`, tags: ['membre'], auteur: 'Système' });
   }
   saveDB();
   closeModal('modal-membre');
@@ -263,7 +263,7 @@ function saveMembre() {
 function deleteMembre(id) {
   if (!confirm('Supprimer ce membre ?')) return;
   const m = DB.membres.find(x => x.id === id);
-  if (m) DB.journal.push({ id: uid(), ts: Date.now(), titre: `Membre supprimé : ${m.nom}`, contenu: `${m.pseudo} a été retiré de la famille.`, tags: ['membre'], auteur: 'Système' });
+  if (m) DB.journal.push({ id: uid(), ts: Date.now(), titre: `Membre supprimé : ${m.nom}`, contenu: `${m.pseudo} a été retiré de l'alliance.`, tags: ['membre'], auteur: 'Système' });
   DB.membres = DB.membres.filter(m => m.id !== id);
   saveDB();
   renderMembres();
@@ -285,18 +285,23 @@ function renderFinances() {
 
   const splitEl = document.getElementById('fin-split');
   if (splitEl) {
+    const simuEl = document.getElementById('fin-simu-benef');
+    const benef = simuEl ? (parseFloat(simuEl.value) || 0) : 0;
     splitEl.innerHTML = DB.membres.map(m => {
-      const share = (caisse * 0.25 * (parseFloat(m.parts) || 0)) / 100;
+      const isPatron = (m.role || '').toLowerCase() === 'patron';
+      const rate     = isPatron ? 0.20 : 0.10;
+      const rateLbl  = isPatron ? '20 % · Patron' : '10 % · Agent';
+      const share    = benef * rate;
       return `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;border-bottom:1px solid var(--c-border);background:var(--c-card);">
         <div style="display:flex;align-items:center;gap:0.75rem;">
           <div class="avatar">${m.initiales}</div>
           <div>
             <div style="font-size:13px;font-weight:500;">${m.nom}</div>
-            <div style="font-size:11px;color:var(--c-muted);">${m.parts}</div>
+            <div style="font-size:11px;color:var(--c-muted);">${rateLbl}</div>
           </div>
         </div>
-        <div style="font-family:var(--f-display);font-size:20px;color:var(--c-gold);">${fmtMoney(share)}</div>
+        <div style="font-family:var(--f-display);font-size:20px;color:var(--c-gold);">${benef > 0 ? fmtMoney(share) : '—'}</div>
       </div>`;
     }).join('');
   }

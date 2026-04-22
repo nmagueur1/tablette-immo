@@ -110,7 +110,7 @@
 
           <div>
             <div class="section-head">
-              <div class="section-head-title" style="font-size:18px;">Objectif <em>rachat</em></div>
+              <div class="section-head-title" style="font-size:18px;">Objectif <em>coffre</em></div>
             </div>
             <div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--r-lg);padding:1.75rem;text-align:center;">
               <svg width="120" height="120" viewBox="0 0 90 90" style="margin:0 auto 1rem;">
@@ -196,9 +196,16 @@
 
           <div>
             <div class="section-head">
-              <div class="section-head-title" style="font-size:18px;">Répartition <em>membres</em></div>
+              <div class="section-head-title" style="font-size:18px;">Commissions <em>par prestation</em></div>
             </div>
-            <div style="font-size:11px;color:var(--c-muted);margin-bottom:1rem;">25% de la caisse divisés selon les parts</div>
+            <div style="font-size:11px;color:var(--c-muted);margin-bottom:1rem;">20 % du bénéfice par Patron · 10 % par Agent</div>
+            <div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--r-lg);padding:1rem;margin-bottom:1rem;">
+              <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--c-muted);margin-bottom:0.5rem;">Simuler une prestation</div>
+              <div style="display:flex;gap:0.5rem;align-items:center;">
+                <input type="number" id="fin-simu-benef" class="form-input" placeholder="Bénéfice $" style="flex:1;padding:0.5rem 0.75rem;font-size:13px;"/>
+                <button class="btn-secondary" onclick="renderFinances()" style="padding:0.5rem 0.9rem;">Calculer</button>
+              </div>
+            </div>
             <div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--r-lg);overflow:hidden;">
               <div id="fin-split"></div>
             </div>
@@ -452,7 +459,7 @@
     <div class="modal-title">Modifier l'<em>objectif</em></div>
     <div class="form-group">
       <label class="form-label">Libellé objectif</label>
-      <input class="form-input" id="fin-objectif-label" placeholder="Ex : Rachat des parts" />
+      <input class="form-input" id="fin-objectif-label" placeholder="Ex : Coffre de l'alliance" />
     </div>
     <div class="form-group">
       <label class="form-label">Montant objectif ($)</label>
@@ -472,7 +479,7 @@
     <input type="hidden" id="mis-id" />
     <div class="form-group">
       <label class="form-label">Titre</label>
-      <input class="form-input" id="mis-titre" placeholder="Ex : Rachat des 100% des parts" />
+      <input class="form-input" id="mis-titre" placeholder="Ex : Première prestation signée" />
     </div>
     <div class="form-group">
       <label class="form-label">Description</label>
