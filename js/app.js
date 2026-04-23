@@ -65,6 +65,16 @@ window.saveDB = async function() {
   catch(e) { console.error('saveDB error:', e); window.toast('⚠ Erreur de sauvegarde'); }
 };
 
+/* ── RESET COMPLET (efface Firestore + localStorage) ─ */
+window.resetDB = async function() {
+  const fresh = JSON.parse(JSON.stringify(defaultDB));
+  fresh.meta.updated = Date.now();
+  window.DB = fresh;
+  try { await setDoc(REF, fresh); }
+  catch(e) { console.error('resetDB error:', e); throw e; }
+  try { localStorage.removeItem('theme'); } catch(_) {}
+};
+
 /* ── REALTIME SYNC ─────────────────────────────────── */
 function startRealtimeSync() {
   if (_unsubscribe) _unsubscribe();

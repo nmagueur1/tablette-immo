@@ -383,9 +383,10 @@ window.toggleTxType = function() {
 };
 
 window.recalcPrestation = function() {
-  const prixBien    = parseFloat(document.getElementById('tx-prix-bien').value)    || 0;
   const prixRevente = parseFloat(document.getElementById('tx-prix-revente').value) || 0;
-  const avance   = prixBien * 0.5;
+  // Prix d'achat calculé automatiquement : 50 % du prix de vente
+  const prixBien = prixRevente * 0.5;
+  const avance   = prixBien; // l'avance = le prix d'achat (50 % du prix de vente)
   const benefice = Math.max(0, prixRevente - avance);
 
   const vendeurKey = document.getElementById('tx-vendeur').value;
@@ -409,14 +410,15 @@ function addTransaction() {
   if (!label) { toast('Ajoute un libellé.'); return; }
 
   if (type === 'prestation') {
-    const prixBien    = parseFloat(document.getElementById('tx-prix-bien').value);
     const prixRevente = parseFloat(document.getElementById('tx-prix-revente').value);
     const vendeur     = document.getElementById('tx-vendeur').value;
-    if (isNaN(prixBien) || prixBien <= 0 || isNaN(prixRevente) || prixRevente <= 0) {
-      toast('Prix du bien et prix de revente requis.'); return;
+    if (isNaN(prixRevente) || prixRevente <= 0) {
+      toast('Prix de vente requis.'); return;
     }
     if (!vendeur) { toast('Choisis un vendeur.'); return; }
-    const avance   = prixBien * 0.5;
+    // Prix d'achat calculé automatiquement : 50 % du prix de vente
+    const prixBien = prixRevente * 0.5;
+    const avance   = prixBien;
     const benefice = Math.max(0, prixRevente - avance);
 
     const vendeurM = DB.membres.find(m => (m.pseudo || m.nom) === vendeur);
@@ -454,7 +456,7 @@ function addTransaction() {
   closeModal('modal-transaction');
   renderFinances();
   toast('Transaction enregistrée.');
-  ['tx-label','tx-montant','tx-note','tx-prix-bien','tx-prix-revente'].forEach(id => {
+  ['tx-label','tx-montant','tx-note','tx-prix-revente'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   ['tx-avance','tx-benef','tx-commi'].forEach(id => {
@@ -712,7 +714,7 @@ function renderVentes() {
 }
 
 function newVente() {
-  ['vt-id','vt-bien','vt-montant','vt-prix-achat','vt-acheteur','vt-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  ['vt-id','vt-bien','vt-montant','vt-acheteur','vt-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   ['vt-avance','vt-benef','vt-commi'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = '0 $'; });
   document.getElementById('vt-type').value = 'Appartement';
   // Populate vendeur select from membres
@@ -723,17 +725,18 @@ function newVente() {
 }
 
 window.recalcVente = function() {
-  const prixAchat   = parseFloat(document.getElementById('vt-prix-achat').value) || 0;
-  const prixRevente = parseFloat(document.getElementById('vt-montant').value)    || 0;
-  const avance   = prixAchat * 0.5;
-  const benefice = Math.max(0, prixRevente - avance);
+  const prixRevente = parseFloat(document.getElementById('vt-montant').value) || 0;
+  // Prix d'achat calculé automatiquement : 50 % du prix de vente
+  const prixAchat = prixRevente * 0.5;
+  const avance    = prixAchat;
+  const benefice  = Math.max(0, prixRevente - avance);
 
   const vendeurKey = document.getElementById('vt-vendeur').value;
   const vendeurM   = DB.membres.find(m => (m.pseudo || m.nom) === vendeurKey);
   const rate       = rateForRole(vendeurM?.role);
   const commi      = benefice * rate;
 
-  document.getElementById('vt-avance').textContent = fmtMoney(avance);
+  document.getElementById('vt-avance').textContent = fmtMoney(prixAchat);
   document.getElementById('vt-benef').textContent  = fmtMoney(benefice);
   document.getElementById('vt-commi').textContent  = fmtMoney(commi);
 };
@@ -741,14 +744,15 @@ window.recalcVente = function() {
 window.saveVente = function() {
   const bien    = document.getElementById('vt-bien').value.trim();
   if (!bien) { toast('Le nom du bien est requis.'); return; }
-  const prixAchat   = parseFloat(document.getElementById('vt-prix-achat').value);
   const prixRevente = parseFloat(document.getElementById('vt-montant').value);
-  if (isNaN(prixAchat) || prixAchat <= 0 || isNaN(prixRevente) || prixRevente <= 0) {
-    toast("Prix d'achat et prix de revente requis."); return;
+  if (isNaN(prixRevente) || prixRevente <= 0) {
+    toast("Prix de vente requis."); return;
   }
-  const avance   = prixAchat * 0.5;
-  const benefice = Math.max(0, prixRevente - avance);
-  const vendeur  = document.getElementById('vt-vendeur').value;
+  // Prix d'achat calculé automatiquement : 50 % du prix de vente
+  const prixAchat = prixRevente * 0.5;
+  const avance    = prixAchat;
+  const benefice  = Math.max(0, prixRevente - avance);
+  const vendeur   = document.getElementById('vt-vendeur').value;
 
   const data = {
     id:       uid(),
@@ -791,14 +795,14 @@ window.saveVente = function() {
   DB.journal.push({
     id: uid(), ts: Date.now(),
     titre: `Prestation : ${bien}`,
-    contenu: `${vendeur} a signé la prestation "${bien}". Achat ${fmtMoney(prixAchat)} · avance ${fmtMoney(avance)} · revente ${fmtMoney(prixRevente)} → bénéfice ${fmtMoney(benefice)}. Commission vendeur : ${fmtMoney(commi)} (${rateLabel} · ${roleLabel}).`,
+    contenu: `${vendeur} a signé la prestation "${bien}". Prix de vente ${fmtMoney(prixRevente)} · prix d'achat auto ${fmtMoney(prixAchat)} → bénéfice ${fmtMoney(benefice)}. Commission vendeur : ${fmtMoney(commi)} (${rateLabel} · ${roleLabel}).`,
     tags: ['vente','prestation'], auteur: 'Système'
   });
   saveDB();
   closeModal('modal-vente');
   renderVentes();
   if (typeof renderFinances === 'function') renderFinances();
-  toast(`Prestation enregistrée · bénéfice ${fmtMoney(benefice)}`);
+  toast(`Vente enregistrée · bénéfice ${fmtMoney(benefice)}`);
 };
 
 window.deleteVente = function(id) {
