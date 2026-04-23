@@ -25,9 +25,9 @@ const defaultDB = {
   membres: [
     { id: 1, initiales:'ES', nom:'Elijah Smith',   pseudo:'[Pseudo]', role:'Patron', statut:'actif', parts:'25%', note:'Fondateur · hommage à Jack Smith' },
     { id: 2, initiales:'[C]', nom:'[Prénom] Carter', pseudo:'[Pseudo]', role:'Patron', statut:'actif', parts:'25%', note:'Co-Patron · hommage à William Carter' },
-    { id: 3, initiales:'A1', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent',  statut:'actif', parts:'..%', note:'' },
-    { id: 4, initiales:'A2', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent',  statut:'actif', parts:'..%', note:'' },
-    { id: 5, initiales:'A3', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent',  statut:'actif', parts:'..%', note:'' },
+    { id: 3, initiales:'E1', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Expérimenté', statut:'actif', parts:'..%', note:'' },
+    { id: 4, initiales:'A1', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent',       statut:'actif', parts:'..%', note:'' },
+    { id: 5, initiales:'A2', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent',       statut:'actif', parts:'..%', note:'' },
   ],
   finances: { caisse: 0, objectif: 500000, objectifLabel: 'Coffre de l\'alliance', transactions: [] },
   missions: [],
