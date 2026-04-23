@@ -756,10 +756,10 @@
           <option value="vendu">Vendu</option>
         </select>
       </div>
-      <div class="form-group">
-        <label class="form-label">URL Photo (optionnel)</label>
-        <input class="form-input" id="bien-photo" placeholder="https://…" />
-      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">URLs Photos <span style="color:var(--c-muted);font-weight:400;">— une par ligne, la 1ʳᵉ = couverture</span></label>
+      <textarea class="form-textarea" id="bien-photos" placeholder="https://exemple.com/photo1.jpg&#10;https://exemple.com/photo2.jpg&#10;https://exemple.com/photo3.jpg" style="min-height:90px;font-family:ui-monospace,monospace;font-size:12px;"></textarea>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('modal-bien')">Annuler</button>
@@ -771,10 +771,14 @@
 <!-- MODAL DÉTAIL BIEN (lecture seule) -->
 <div class="modal-bg" id="modal-bien-detail">
   <div class="modal" style="max-width:540px;padding:0;overflow:hidden;">
-    <div id="bien-detail-photo" style="height:200px;background:var(--c-surface);background-size:cover;background-position:center;position:relative;">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.7));"></div>
-      <button onclick="closeModal('modal-bien-detail')" style="position:absolute;top:1rem;right:1rem;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;">✕</button>
-      <div style="position:absolute;bottom:1rem;left:1.5rem;">
+    <div id="bien-detail-carousel" style="height:220px;background:var(--c-surface);position:relative;overflow:hidden;">
+      <div id="bien-detail-track" style="position:absolute;inset:0;display:flex;transition:transform 0.35s ease;will-change:transform;"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.7));pointer-events:none;"></div>
+      <button id="bien-detail-prev" onclick="carouselPrev()" aria-label="Précédente" style="position:absolute;top:50%;left:0.6rem;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:18px;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:3;">‹</button>
+      <button id="bien-detail-next" onclick="carouselNext()" aria-label="Suivante" style="position:absolute;top:50%;right:0.6rem;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:18px;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:3;">›</button>
+      <button onclick="closeModal('modal-bien-detail')" style="position:absolute;top:1rem;right:1rem;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4;">✕</button>
+      <div id="bien-detail-dots" style="position:absolute;bottom:0.55rem;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:3;"></div>
+      <div style="position:absolute;bottom:1rem;left:1.5rem;z-index:2;">
         <div id="bien-detail-statut-badge" style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.4rem;"></div>
         <div id="bien-detail-ref" style="font-size:11px;color:rgba(255,255,255,0.6);letter-spacing:0.2em;text-transform:uppercase;"></div>
       </div>
@@ -875,5 +879,4 @@
   }
   window.confirmReset = confirmReset;
 </script>
-</body>
-</html>
+</b

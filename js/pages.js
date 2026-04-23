@@ -1241,17 +1241,21 @@ function renderCatalogue() {
   }
 
   grid.innerHTML = filtered.map(b => {
-    const tag   = statutBienTag(b.statut);
-    const label = statutBienLabel(b.statut);
-    const photo = b.photo || '';
-    const photoBg = photo
-      ? `background-image:url('${photo}');background-size:cover;background-position:center;`
+    const tag    = statutBienTag(b.statut);
+    const label  = statutBienLabel(b.statut);
+    const photos = getPhotos(b);
+    const cover  = photos[0] || '';
+    const photoBg = cover
+      ? `background-image:url('${cover}');background-size:cover;background-position:center;`
       : `background:var(--c-surface);display:flex;align-items:center;justify-content:center;`;
-    const photoContent = photo ? '' : `<span style="font-size:32px;opacity:0.3;">🏠</span>`;
+    const photoContent = cover ? '' : `<span style="font-size:32px;opacity:0.3;">🏠</span>`;
+    const multiBadge = photos.length > 1
+      ? `<span style="position:absolute;top:0.5rem;left:0.5rem;background:rgba(0,0,0,0.6);color:#fff;font-size:10px;letter-spacing:0.08em;padding:2px 7px;border-radius:10px;">📷 ${photos.length}</span>`
+      : '';
 
     return `
     <div class="cat-card" onclick="ouvrirDetailBien('${b.id}')" style="cursor:pointer;">
-      <div class="cat-card-img" style="${photoBg}">${photoContent}</div>
+      <div class="cat-card-img" style="${photoBg}position:relative;">${photoContent}${multiBadge}</div>
       <div class="cat-card-body">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;">
           <span class="tag tag-${tag}">${label}</span>
@@ -1278,16 +1282,11 @@ function ouvrirDetailBien(id) {
   const b = (DB.catalogue || []).find(x => x.id === id);
   if (!b) return;
 
-  const tag   = statutBienTag(b.statut);
-  const label = statutBienLabel(b.statut);
-  const photo = b.photo || '';
+  const tag    = statutBienTag(b.statut);
+  const label  = statutBienLabel(b.statut);
+  const photos = getPhotos(b);
 
-  const photoDiv = document.getElementById('bien-detail-photo');
-  if (photoDiv) {
-    photoDiv.style.backgroundImage = photo ? `url('${photo}')` : '';
-    photoDiv.style.background = photo ? '' : 'var(--c-surface)';
-    if (photo) { photoDiv.style.backgroundSize = 'cover'; photoDiv.style.backgroundPosition = 'center'; }
-  }
+  buildCarousel(photos);
 
   document.getElementById('bien-detail-ref').textContent = b.ref || '';
   document.getElementById('bien-detail-titre').textContent = b.titre || '—';
@@ -1324,9 +1323,79 @@ function ouvrirDetailBien(id) {
   openModal('modal-bien-detail');
 }
 
+/* ── HELPERS PHOTOS (carrousel) ─────────────────── */
+function getPhotos(b) {
+  if (!b) return [];
+  if (Array.isArray(b.photos) && b.photos.length) return b.photos.filter(Boolean);
+  if (b.photo) return [b.photo];
+  return [];
+}
+
+let _carouselIndex = 0;
+let _carouselPhotos = [];
+
+function buildCarousel(photos) {
+  _carouselPhotos = photos.slice();
+  _carouselIndex  = 0;
+
+  const track = document.getElementById('bien-detail-track');
+  const dots  = document.getElementById('bien-detail-dots');
+  const prev  = document.getElementById('bien-detail-prev');
+  const next  = document.getElementById('bien-detail-next');
+  if (!track) return;
+
+  if (!photos.length) {
+    track.innerHTML = `<div style="flex:0 0 100%;display:flex;align-items:center;justify-content:center;background:var(--c-surface);"><span style="font-size:48px;opacity:0.25;">🏠</span></div>`;
+    track.style.transform = 'translateX(0)';
+    if (dots) dots.innerHTML = '';
+    if (prev) prev.style.display = 'none';
+    if (next) next.style.display = 'none';
+    return;
+  }
+
+  track.innerHTML = photos.map(url =>
+    `<div style="flex:0 0 100%;height:100%;background-image:url('${url}');background-size:cover;background-position:center;background-color:var(--c-surface);"></div>`
+  ).join('');
+  track.style.transform = 'translateX(0)';
+
+  if (dots) {
+    dots.innerHTML = photos.length > 1
+      ? photos.map((_, i) =>
+          `<button onclick="carouselGoto(${i})" aria-label="Photo ${i+1}" style="width:7px;height:7px;border-radius:50%;border:none;padding:0;cursor:pointer;background:${i === 0 ? '#fff' : 'rgba(255,255,255,0.4)'};transition:background 0.2s;" data-dot="${i}"></button>`
+        ).join('')
+      : '';
+  }
+  if (prev) prev.style.display = photos.length > 1 ? 'flex' : 'none';
+  if (next) next.style.display = photos.length > 1 ? 'flex' : 'none';
+}
+
+function carouselGoto(i) {
+  if (!_carouselPhotos.length) return;
+  _carouselIndex = (i + _carouselPhotos.length) % _carouselPhotos.length;
+  const track = document.getElementById('bien-detail-track');
+  if (track) track.style.transform = `translateX(-${_carouselIndex * 100}%)`;
+  const dots = document.getElementById('bien-detail-dots');
+  if (dots) dots.querySelectorAll('[data-dot]').forEach((d, idx) => {
+    d.style.background = idx === _carouselIndex ? '#fff' : 'rgba(255,255,255,0.4)';
+  });
+}
+function carouselNext() { carouselGoto(_carouselIndex + 1); }
+function carouselPrev() { carouselGoto(_carouselIndex - 1); }
+window.carouselGoto = carouselGoto;
+window.carouselNext = carouselNext;
+window.carouselPrev = carouselPrev;
+
+// Navigation clavier quand le modal-detail est ouvert
+document.addEventListener('keydown', (e) => {
+  const modal = document.getElementById('modal-bien-detail');
+  if (!modal || !modal.classList.contains('open')) return;
+  if (e.key === 'ArrowRight') carouselNext();
+  if (e.key === 'ArrowLeft')  carouselPrev();
+});
+
 function newBien() {
   document.getElementById('modal-bien-title').innerHTML = 'Nouveau <em>bien</em>';
-  ['bien-id','bien-ref','bien-titre','bien-adresse','bien-prix','bien-surface','bien-pieces','bien-description','bien-photo'].forEach(id => {
+  ['bien-id','bien-ref','bien-titre','bien-adresse','bien-prix','bien-surface','bien-pieces','bien-description','bien-photos'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -1347,7 +1416,7 @@ function editBien(id) {
   document.getElementById('bien-surface').value     = b.surface || '';
   document.getElementById('bien-pieces').value      = b.pieces || '';
   document.getElementById('bien-description').value = b.description || '';
-  document.getElementById('bien-photo').value       = b.photo || '';
+  document.getElementById('bien-photos').value      = getPhotos(b).join('\n');
   document.getElementById('bien-type').value        = b.type || 'Appartement';
   document.getElementById('bien-statut').value      = b.statut || 'disponible';
   openModal('modal-bien');
@@ -1359,6 +1428,9 @@ function saveBien() {
   if (!DB.catalogue) DB.catalogue = [];
 
   const id  = document.getElementById('bien-id').value.trim();
+  const photosRaw = document.getElementById('bien-photos').value || '';
+  const photos = photosRaw.split('\n').map(s => s.trim()).filter(Boolean);
+
   const data = {
     id:          id || uid(),
     ref:         document.getElementById('bien-ref').value.trim(),
@@ -1369,7 +1441,8 @@ function saveBien() {
     surface:     parseFloat(document.getElementById('bien-surface').value) || 0,
     pieces:      parseInt(document.getElementById('bien-pieces').value) || 0,
     description: document.getElementById('bien-description').value.trim(),
-    photo:       document.getElementById('bien-photo').value.trim(),
+    photos,                     // nouveau — tableau
+    photo:       photos[0] || '', // rétro-compat lecteurs legacy
     statut:      document.getElementById('bien-statut').value,
     ts:          id ? (DB.catalogue.find(b => b.id === id)?.ts || Date.now()) : Date.now(),
   };
