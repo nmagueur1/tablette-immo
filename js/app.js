@@ -120,7 +120,7 @@ function toggleTheme() {
 
 /* ── ROUTING ───────────────────────────────────────── */
 const PAGE_TITLES = {
-  dashboard:  'Tableau de bord',   membres:   'Gestion des membres',
+  dashboard:  'Dashboard',         membres:   'Gestion des membres',
   finances:   'Caisse & Finances', missions:  'Objectifs & Missions',
   journal:    'Journal des actions',
   ventes:     'Ventes',            votes:     'Votes & Décisions',
