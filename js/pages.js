@@ -202,7 +202,7 @@ function renderMembres() {
         </div>
       </td>
       <td><span class="tag tag-gold">${m.role}</span></td>
-      <td style="font-family:var(--f-display);font-size:18px;color:var(--c-gold);">${m.parts}</td>
+      <td style="font-family:var(--f-display);font-size:18px;color:var(--c-gold);">${partsLabelForRole(m.role)}</td>
       <td>
         <select class="statut-select" data-id="${m.id}"
           style="background:var(--c-surface);border:1px solid var(--c-border-m);border-radius:var(--r-md);
@@ -242,7 +242,7 @@ function editMembre(id) {
   document.getElementById('m-pseudo').value    = m.pseudo;
   document.getElementById('m-initiales').value = m.initiales;
   document.getElementById('m-role').value      = m.role;
-  document.getElementById('m-parts').value     = m.parts;
+  document.getElementById('m-parts').value     = partsLabelForRole(m.role);
   document.getElementById('m-statut').value    = m.statut;
   document.getElementById('m-note').value      = m.note || '';
   document.getElementById('modal-membre-title').textContent = 'Modifier le membre';
@@ -1125,7 +1125,7 @@ function openFicheMembre(id) {
         <div class="fiche-pseudo">${m.pseudo}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <span class="tag tag-gold">${m.role}</span>
-          <span class="tag" style="font-size:10px;">${m.parts}</span>
+          <span class="tag" style="font-size:10px;">${partsLabelForRole(m.role)}</span>
         </div>
       </div>
       <button class="fiche-close" onclick="closeFiche()">✕</button>
