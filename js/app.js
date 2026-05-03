@@ -40,7 +40,7 @@ const defaultDB = {
 
 window.DB = {};
 let _unsubscribe = null;
-let currentPage = 'dashboard';
+window.currentPage = 'dashboard';
 
 /* ── FIREBASE LOAD ─────────────────────────────────── */
 async function loadDB() {
@@ -84,7 +84,7 @@ function startRealtimeSync() {
       if (d.meta?.updated !== window.DB.meta?.updated) {
         window.DB = d;
         detectRole();
-        renderPage(currentPage);
+        renderPage(window.currentPage);
       }
     }
   });
@@ -126,7 +126,7 @@ function renderPage(page) {
 }
 
 window.navigate = function(page) {
-  currentPage = page;
+  window.currentPage = page;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + page)?.classList.add('active');

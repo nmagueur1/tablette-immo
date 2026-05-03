@@ -137,7 +137,7 @@ function changerStatut(id, nouveau) {
   }
   saveDB();
   renderMembres();
-  if (currentPage === 'dashboard') renderDashboard();
+  if (window.currentPage === 'dashboard') renderDashboard();
 }
 
 function resetSemaine() {
