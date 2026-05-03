@@ -177,6 +177,78 @@ function resetSemaine() {
 }
 
 /* ── MEMBRES ─────────────────────────────────────── */
+
+/* Ordre canonique des rôles (du plus haut au plus bas) */
+const ROLE_ORDER = ['Patron', 'Expérimenté', 'Agent'];
+
+/* Renvoie un index d'ordre pour un rôle (matching tolérant aux accents) */
+function roleOrderIndex(role) {
+  const r = (role || '').toLowerCase().trim();
+  if (r === 'patron')        return 0;
+  if (r === 'expérimenté' || r === 'experimente' || r === 'experimenté' || r === 'expérimente') return 1;
+  if (r === 'agent')         return 2;
+  return 3; // inconnu → en dernier
+}
+
+/* HTML d'une ligne de séparation pour un groupe de rôle */
+function roleGroupRow(role, count) {
+  return `
+  <tr class="role-group-row">
+    <td colspan="7" style="padding:0.85rem 1.25rem;background:var(--c-surface);border-top:1px solid var(--c-border);border-bottom:1px solid var(--c-border);">
+      <div style="display:flex;align-items:center;gap:0.75rem;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--c-gold);">
+        <span>${role}${count > 1 ? 's' : ''}</span>
+        <span style="flex:1;height:1px;background:var(--c-border);"></span>
+        <span style="color:var(--c-faint);letter-spacing:0.2em;">${count} membre${count > 1 ? 's' : ''} · ${partsLabelForRole(role)}</span>
+      </div>
+    </td>
+  </tr>`;
+}
+
+/* HTML d'une ligne de membre */
+function memberRow(m) {
+  const isActif  = m.statut === 'actif';
+  const tempsStr = fmtDuree(getTempsActifSemaine(m));
+  return `
+  <tr>
+    <td>
+      <div style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;" onclick="openFicheMembre(${m.id})" title="Voir la fiche">
+        <div class="avatar" style="position:relative;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--c-gold)'" onmouseout="this.style.borderColor=''">
+          ${m.initiales}
+          ${isActif ? `<span style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:var(--c-green);border:2px solid var(--c-card);"></span>` : ''}
+        </div>
+        <div>
+          <div style="font-weight:500;">${m.nom}</div>
+          <div style="font-size:11px;color:var(--c-muted);">${m.pseudo}</div>
+        </div>
+      </div>
+    </td>
+    <td><span class="tag tag-gold">${m.role}</span></td>
+    <td style="font-family:var(--f-display);font-size:18px;color:var(--c-gold);">${partsLabelForRole(m.role)}</td>
+    <td>
+      <select class="statut-select" data-id="${m.id}"
+        style="background:var(--c-surface);border:1px solid var(--c-border-m);border-radius:var(--r-md);
+               padding:4px 8px;font-size:12px;color:var(--c-white);outline:none;cursor:pointer;">
+        <option value="actif"   ${isActif             ?'selected':''}>🟢 Actif</option>
+        <option value="absent"  ${m.statut==='absent'  ?'selected':''}>🔴 Absent</option>
+        <option value="inactif" ${m.statut==='inactif' ?'selected':''}>⚪ Inactif</option>
+      </select>
+    </td>
+    <td>
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <span id="timer-${m.id}" style="font-family:var(--f-display);font-size:18px;color:${isActif?'var(--c-green)':'var(--c-muted)'};">${tempsStr}</span>
+        <span style="font-size:10px;color:var(--c-faint);letter-spacing:0.1em;">cette semaine</span>
+      </div>
+    </td>
+    <td style="color:var(--c-muted);font-size:12px;">${m.note || '—'}</td>
+    <td>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-secondary patron-only" style="padding:0.3rem 0.65rem;font-size:11px;" onclick="editMembre(${m.id})">Modifier</button>
+        <button class="btn-danger patron-only" onclick="deleteMembre(${m.id})">✕</button>
+      </div>
+    </td>
+  </tr>`;
+}
+
 function renderMembres() {
   const tbody = document.getElementById('membres-tbody');
   if (!tbody) return;
@@ -184,49 +256,34 @@ function renderMembres() {
     tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">👥</div><div class="empty-text">Aucun membre</div></div></td></tr>`;
     return;
   }
-  tbody.innerHTML = DB.membres.map(m => {
-    const isActif  = m.statut === 'actif';
-    const tempsStr = fmtDuree(getTempsActifSemaine(m));
-    return `
-    <tr>
-      <td>
-        <div style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;" onclick="openFicheMembre(${m.id})" title="Voir la fiche">
-          <div class="avatar" style="position:relative;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--c-gold)'" onmouseout="this.style.borderColor=''">
-            ${m.initiales}
-            ${isActif ? `<span style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:var(--c-green);border:2px solid var(--c-card);"></span>` : ''}
-          </div>
-          <div>
-            <div style="font-weight:500;">${m.nom}</div>
-            <div style="font-size:11px;color:var(--c-muted);">${m.pseudo}</div>
-          </div>
-        </div>
-      </td>
-      <td><span class="tag tag-gold">${m.role}</span></td>
-      <td style="font-family:var(--f-display);font-size:18px;color:var(--c-gold);">${partsLabelForRole(m.role)}</td>
-      <td>
-        <select class="statut-select" data-id="${m.id}"
-          style="background:var(--c-surface);border:1px solid var(--c-border-m);border-radius:var(--r-md);
-                 padding:4px 8px;font-size:12px;color:var(--c-white);outline:none;cursor:pointer;">
-          <option value="actif"   ${isActif             ?'selected':''}>🟢 Actif</option>
-          <option value="absent"  ${m.statut==='absent'  ?'selected':''}>🔴 Absent</option>
-          <option value="inactif" ${m.statut==='inactif' ?'selected':''}>⚪ Inactif</option>
-        </select>
-      </td>
-      <td>
-        <div style="display:flex;flex-direction:column;gap:2px;">
-          <span id="timer-${m.id}" style="font-family:var(--f-display);font-size:18px;color:${isActif?'var(--c-green)':'var(--c-muted)'};">${tempsStr}</span>
-          <span style="font-size:10px;color:var(--c-faint);letter-spacing:0.1em;">cette semaine</span>
-        </div>
-      </td>
-      <td style="color:var(--c-muted);font-size:12px;">${m.note || '—'}</td>
-      <td>
-        <div style="display:flex;gap:6px;">
-          <button class="btn-secondary patron-only" style="padding:0.3rem 0.65rem;font-size:11px;" onclick="editMembre(${m.id})">Modifier</button>
-          <button class="btn-danger patron-only" onclick="deleteMembre(${m.id})">✕</button>
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
+
+  // Tri : par rôle (Patron → Expérimenté → Agent → autre), puis par nom
+  const sorted = [...DB.membres].sort((a, b) => {
+    const ra = roleOrderIndex(a.role);
+    const rb = roleOrderIndex(b.role);
+    if (ra !== rb) return ra - rb;
+    return (a.nom || '').localeCompare(b.nom || '', 'fr', { sensitivity: 'base' });
+  });
+
+  // Génération des lignes avec en-têtes de groupe
+  let html = '';
+  let currentRole = null;
+  ROLE_ORDER.forEach(role => {
+    const group = sorted.filter(m => roleOrderIndex(m.role) === roleOrderIndex(role));
+    if (group.length === 0) return;
+    html += roleGroupRow(role, group.length);
+    html += group.map(memberRow).join('');
+    currentRole = role;
+  });
+
+  // Membres avec rôle inconnu, le cas échéant
+  const others = sorted.filter(m => roleOrderIndex(m.role) > 2);
+  if (others.length > 0) {
+    html += roleGroupRow('Autre', others.length);
+    html += others.map(memberRow).join('');
+  }
+
+  tbody.innerHTML = html;
 
   document.querySelectorAll('.statut-select').forEach(sel => {
     sel.addEventListener('change', () => changerStatut(parseInt(sel.dataset.id), sel.value));
