@@ -14,6 +14,23 @@ function rateForRole(role) {
 }
 window.rateForRole = rateForRole;
 
+/* Libellé % à afficher dans le champ "Parts" en fonction du rôle */
+function partsLabelForRole(role) {
+  const r = (role || '').toLowerCase().trim();
+  if (r === 'patron')        return '25%';
+  if (r === 'expérimenté' || r === 'experimente' || r === 'experimenté' || r === 'expérimente') return '17,5%';
+  return '10%'; // Agent par défaut
+}
+window.partsLabelForRole = partsLabelForRole;
+
+/* Auto-remplissage du champ Parts quand le rôle change dans la modale Membre */
+window.syncPartsFromRole = function() {
+  const roleEl  = document.getElementById('m-role');
+  const partsEl = document.getElementById('m-parts');
+  if (!roleEl || !partsEl) return;
+  partsEl.value = partsLabelForRole(roleEl.value);
+};
+
 function renderDashboard() {
   const actifs = DB.membres.filter(m => m.statut === 'actif').length;
   const caisse = DB.finances.caisse;
@@ -238,7 +255,7 @@ function newMembre() {
   document.getElementById('m-pseudo').value    = '';
   document.getElementById('m-initiales').value = '';
   document.getElementById('m-role').value      = 'Agent';
-  document.getElementById('m-parts').value     = '0%';
+  document.getElementById('m-parts').value     = partsLabelForRole('Agent');
   document.getElementById('m-statut').value    = 'actif';
   document.getElementById('m-note').value      = '';
   document.getElementById('modal-membre-title').textContent = 'Nouveau membre';

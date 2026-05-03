@@ -23,11 +23,24 @@ const REF     = doc(db, 'wj-realty', 'main');
 const defaultDB = {
   meta: { nom: 'Dynasty 8', updated: Date.now() },
   membres: [
-    { id: 1, initiales:'EC', nom:'Elijah Carter', pseudo:'ElijahCarter', role:'Patron', statut:'actif', parts:'25%', note:'Patron · porteur du projet' },
-    { id: 2, initiales:'SC', nom:'Sidji Carter',  pseudo:'SidjiCarter', role:'Patron', statut:'actif', parts:'25%', note:'Co-Patron · co-dirigeant' },
-    { id: 3, initiales:'E1', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Expérimenté', statut:'actif', parts:'..%', note:'' },
-    { id: 4, initiales:'A1', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent',       statut:'actif', parts:'..%', note:'' },
-    { id: 5, initiales:'A2', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent',       statut:'actif', parts:'..%', note:'' },
+    // ── PATRONS (2) ──
+    { id: 1,  initiales:'EC', nom:'Elijah Carter', pseudo:'ElijahCarter', role:'Patron',      statut:'actif', parts:'25%',   note:'Patron · porteur du projet' },
+    { id: 2,  initiales:'SC', nom:'Sidji Carter',  pseudo:'SidjiCarter',  role:'Patron',      statut:'actif', parts:'25%',   note:'Co-Patron · co-dirigeant' },
+    // ── EXPÉRIMENTÉS (4) ──
+    { id: 3,  initiales:'E1', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Expérimenté', statut:'actif', parts:'17,5%', note:'' },
+    { id: 4,  initiales:'E2', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Expérimenté', statut:'actif', parts:'17,5%', note:'' },
+    { id: 5,  initiales:'E3', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Expérimenté', statut:'actif', parts:'17,5%', note:'' },
+    { id: 6,  initiales:'E4', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Expérimenté', statut:'actif', parts:'17,5%', note:'' },
+    // ── AGENTS (9) ──
+    { id: 7,  initiales:'A1', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent', statut:'actif', parts:'10%', note:'' },
+    { id: 8,  initiales:'A2', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent', statut:'actif', parts:'10%', note:'' },
+    { id: 9,  initiales:'A3', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent', statut:'actif', parts:'10%', note:'' },
+    { id: 10, initiales:'A4', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent', statut:'actif', parts:'10%', note:'' },
+    { id: 11, initiales:'A5', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent', statut:'actif', parts:'10%', note:'' },
+    { id: 12, initiales:'A6', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent', statut:'actif', parts:'10%', note:'' },
+    { id: 13, initiales:'A7', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent', statut:'actif', parts:'10%', note:'' },
+    { id: 14, initiales:'A8', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent', statut:'actif', parts:'10%', note:'' },
+    { id: 15, initiales:'A9', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent', statut:'actif', parts:'10%', note:'' },
   ],
   finances: { caisse: 0, objectif: 500000, objectifLabel: 'Coffre Dynasty 8', transactions: [] },
   missions: [],

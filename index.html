@@ -80,7 +80,7 @@
           <div class="stat-card">
             <div class="stat-label">Membres actifs</div>
             <div class="stat-value" id="dash-membres">—</div>
-            <div class="stat-sub">sur 5 membres</div>
+            <div class="stat-sub">sur 15 membres</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Caisse commune</div>
@@ -389,7 +389,7 @@
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Rôle</label>
-        <select class="form-select" id="m-role">
+        <select class="form-select" id="m-role" onchange="syncPartsFromRole()">
           <option>Patron</option>
           <option>Expérimenté</option>
           <option>Agent</option>
