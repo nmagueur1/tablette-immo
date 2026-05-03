@@ -264,7 +264,7 @@ function saveMembre() {
     DB.journal.push({ id: uid(), ts: Date.now(), titre: `Membre modifié : ${nom}`, contenu: `Rôle : ${data.role} · Parts : ${data.parts} · Statut : ${data.statut}${data.note ? ' · Note : ' + data.note : ''}`, tags: ['membre'], auteur: 'Système' });
   } else {
     DB.membres.push({ id: Date.now(), ...data });
-    DB.journal.push({ id: uid(), ts: Date.now(), titre: `Nouveau membre : ${nom}`, contenu: `${data.pseudo} a rejoint l'alliance. Rôle : ${data.role} · Parts : ${data.parts}`, tags: ['membre'], auteur: 'Système' });
+    DB.journal.push({ id: uid(), ts: Date.now(), titre: `Nouveau membre : ${nom}`, contenu: `${data.pseudo} a rejoint la famille. Rôle : ${data.role} · Parts : ${data.parts}`, tags: ['membre'], auteur: 'Système' });
   }
   saveDB();
   closeModal('modal-membre');
@@ -275,7 +275,7 @@ function saveMembre() {
 function deleteMembre(id) {
   if (!confirm('Supprimer ce membre ?')) return;
   const m = DB.membres.find(x => x.id === id);
-  if (m) DB.journal.push({ id: uid(), ts: Date.now(), titre: `Membre supprimé : ${m.nom}`, contenu: `${m.pseudo} a été retiré de l'alliance.`, tags: ['membre'], auteur: 'Système' });
+  if (m) DB.journal.push({ id: uid(), ts: Date.now(), titre: `Membre supprimé : ${m.nom}`, contenu: `${m.pseudo} a été retiré de la famille.`, tags: ['membre'], auteur: 'Système' });
   DB.membres = DB.membres.filter(m => m.id !== id);
   saveDB();
   renderMembres();

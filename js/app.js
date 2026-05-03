@@ -21,15 +21,15 @@ const REF     = doc(db, 'wj-realty', 'main');
 
 /* ── DEFAULT DATA ──────────────────────────────────── */
 const defaultDB = {
-  meta: { nom: 'W&J Realty', updated: Date.now() },
+  meta: { nom: 'Dynasty 8', updated: Date.now() },
   membres: [
-    { id: 1, initiales:'ES', nom:'Elijah Smith',   pseudo:'[Pseudo]', role:'Patron', statut:'actif', parts:'25%', note:'Fondateur · hommage à Jack Smith' },
-    { id: 2, initiales:'[C]', nom:'[Prénom] Carter', pseudo:'[Pseudo]', role:'Patron', statut:'actif', parts:'25%', note:'Co-Patron · hommage à William Carter' },
+    { id: 1, initiales:'EC', nom:'Elijah Carter', pseudo:'ElijahCarter', role:'Patron', statut:'actif', parts:'25%', note:'Patron · porteur du projet' },
+    { id: 2, initiales:'SC', nom:'Sidji Carter',  pseudo:'SidjiCarter', role:'Patron', statut:'actif', parts:'25%', note:'Co-Patron · co-dirigeant' },
     { id: 3, initiales:'E1', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Expérimenté', statut:'actif', parts:'..%', note:'' },
     { id: 4, initiales:'A1', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent',       statut:'actif', parts:'..%', note:'' },
     { id: 5, initiales:'A2', nom:'[Prénom] [Nom]', pseudo:'[Pseudo]', role:'Agent',       statut:'actif', parts:'..%', note:'' },
   ],
-  finances: { caisse: 0, objectif: 500000, objectifLabel: 'Coffre de l\'alliance', transactions: [] },
+  finances: { caisse: 0, objectif: 500000, objectifLabel: 'Coffre Dynasty 8', transactions: [] },
   missions: [],
   ventes: [],
   votes: [],
@@ -168,7 +168,7 @@ function startClock() {
 /* ── DÉTECTION DU RÔLE ─────────────────────────────── */
 function detectRole() {
   const raw    = sessionStorage.getItem('tablette-user') || '';
-  // Le displayName stocké est le pseudo (ex: "ElijahSmith") ou l'email ("elijah.smith@wjrealty.rp")
+  // Le displayName stocké est le pseudo (ex: "ElijahCarter") ou l'email ("elijah.carter@dynasty8.rp")
   const pseudo = raw.includes('@') ? raw.split('@')[0].replace(/\./g, ' ') : raw;
   const p      = pseudo.toLowerCase().trim();
 
